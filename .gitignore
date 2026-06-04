@@ -1,0 +1,28 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Angular
+.angular/
+dist/
+tmp/
+out-tsc/
+.sass-cache/
+
+# IDEs
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
