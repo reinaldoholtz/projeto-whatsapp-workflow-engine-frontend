@@ -73,8 +73,7 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/settings/settings-page.component').then(m => m.SettingsPageComponent),
         title: 'Configurações — CRM WhatsApp',
-      },
-      { path: 'documents', redirectTo: 'leads', pathMatch: 'full' },
+      },      
     ],
   },
   { path: '**', redirectTo: '/dashboard' },

@@ -80,8 +80,7 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { label: 'Dashboard',    icon: 'dashboard',        route: '/dashboard'  },
     { label: 'Leads',        icon: 'people',           route: '/leads'      },
-    { label: 'Workflows',    icon: 'account_tree',     route: '/workflows', adminOnly: true },
-    { label: 'Documentos',   icon: 'folder_open',      route: '/documents'  },
+    { label: 'Workflows',    icon: 'account_tree',     route: '/workflows', adminOnly: true },  
     { label: 'Configurações',icon: 'settings',         route: '/settings'   },
   ];
 }

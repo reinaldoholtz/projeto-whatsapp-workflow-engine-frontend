@@ -1,7 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { NgClass } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatMenuModule } from '@angular/material/menu';
@@ -12,6 +11,8 @@ import { LeadSession, LeadStatus } from '@shared/models';
 import { StatusBadgeComponent } from '@shared/components/badge/status-badge.component';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 import { DatePipe } from '@angular/common';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { startWith } from 'rxjs';
 
 @Component({
   selector: 'app-lead-list-page',
@@ -35,11 +36,7 @@ import { DatePipe } from '@angular/common';
       <div class="card p-4">
         <form [formGroup]="filterForm" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
 
-          <div class="relative">
-            <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">search</span>
-            <input formControlName="search" placeholder="Nome ou telefone..."
-              class="input-field pl-9" />
-          </div>
+          <input formControlName="search" placeholder="Nome ou telefone..." class="input-field" />
 
           <select formControlName="status" class="input-field">
             <option value="">Todos os status</option>
@@ -224,9 +221,18 @@ export class LeadListPageComponent implements OnInit {
     step:     [''],
   });
 
-  filteredLeads = computed(() => {
-    const { search, status, workflow, step } = this.filterForm.value;
-    return this.leads().filter(l => {
+  filterValues = toSignal(
+    this.filterForm.valueChanges.pipe(
+      startWith(this.filterForm.getRawValue())
+    ),
+    {
+      initialValue: this.filterForm.getRawValue()
+    }
+  );
+
+  filteredLeads = computed(() => {  
+    const { search, status, workflow, step } = this.filterValues();
+    return this.leads().filter(l => {  
       const text = (search || '').toLowerCase();
       const matchSearch = !text ||
         (l.profileName?.toLowerCase().includes(text) ?? false) ||
@@ -234,6 +240,7 @@ export class LeadListPageComponent implements OnInit {
       const matchStatus   = !status   || l.status === status;
       const matchWorkflow = !workflow || (l.workflow?.toLowerCase().includes((workflow || '').toLowerCase()) ?? false);
       const matchStep     = !step     || (l.currentStep?.toLowerCase().includes((step || '').toLowerCase()) ?? false);
+      
       return matchSearch && matchStatus && matchWorkflow && matchStep;
     });
   });
@@ -251,7 +258,9 @@ export class LeadListPageComponent implements OnInit {
   loadLeads() {
     this.loading.set(true);
     this.leadService.getAll().subscribe({
-      next:  l => { this.leads.set(l); this.loading.set(false); },
+      next:  l => { 
+        console.log('LEADS API', l);
+        this.leads.set(l); this.loading.set(false); },
       error: () => this.loading.set(false),
     });
   }
