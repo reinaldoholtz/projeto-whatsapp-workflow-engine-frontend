@@ -212,10 +212,7 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 Nome completo *
               </label>
-              <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">person</span>
-                <input formControlName="name" placeholder="Ex: João da Silva" class="form-input pl-9" />
-              </div>
+              <input formControlName="name"   placeholder="Ex: João da Silva" class="form-input"/>
               @if (form.get('name')?.invalid && form.get('name')?.touched) {
                 <p class="text-red-500 text-xs mt-1">Nome é obrigatório</p>
               }
@@ -226,12 +223,28 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                 E-mail *
               </label>
-              <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">email</span>
-                <input formControlName="email" type="email" placeholder="joao@empresa.com.br" class="form-input pl-9" />
-              </div>
+              <input formControlName="email" type="email" placeholder="joao@empresa.com.br" class="form-input"/>
               @if (form.get('email')?.invalid && form.get('email')?.touched) {
                 <p class="text-red-500 text-xs mt-1">E-mail válido é obrigatório</p>
+              }
+            </div>
+
+            <!-- Phone -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                Telefone *
+              </label>
+
+              <input
+                formControlName="phoneNumber"
+                placeholder="+55 11 99999-9999"
+                class="form-input"
+              />
+
+              @if (form.get('phoneNumber')?.invalid && form.get('phoneNumber')?.touched) {
+                <p class="text-red-500 text-xs mt-1">
+                  Telefone é obrigatório
+                </p>
               }
             </div>
 
@@ -241,12 +254,10 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
                 Senha {{ editing() ? '(deixe em branco para manter)' : '*' }}
               </label>
               <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">lock</span>
-                <input formControlName="password"
-                  [type]="showPass() ? 'text' : 'password'"
-                  placeholder="{{ editing() ? '••••••' : 'Mínimo 6 caracteres' }}"
-                  class="form-input pl-9 pr-10" />
-                <button type="button" (click)="toggleShowPass()"
+                <input formControlName="password" [type]="showPass() ? 'text' : 'password'" class="form-input pr-10"/>
+                <button
+                  type="button"
+                  (click)="toggleShowPass()"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                   <span class="material-icons-round text-base">
                     {{ showPass() ? 'visibility_off' : 'visibility' }}
@@ -376,6 +387,7 @@ export class UsersPageComponent implements OnInit {
 
   form = this.fb.group({
     name:     ['', Validators.required],
+    phoneNumber: ['', Validators.required],
     email:    ['', [Validators.required, Validators.email]],
     password: [''],
     role:     [null as UserRole | null, Validators.required],
@@ -463,6 +475,7 @@ export class UsersPageComponent implements OnInit {
     this.form.reset({
       name:     user?.name ?? '',
       email:    user?.email ?? '',
+      phoneNumber: user?.phoneNumber ?? '',
       password: '',
       role:     user?.role ?? null,
       active:   user?.active ?? true,
@@ -491,6 +504,7 @@ export class UsersPageComponent implements OnInit {
       const req: UpdateUserRequest = {
         name:   v.name   || undefined,
         email:  v.email  || undefined,
+        phoneNumber: v.phoneNumber || undefined,
         role:   (v.role as UserRole) || undefined,
         active: v.active ?? undefined,
       };
@@ -512,6 +526,7 @@ export class UsersPageComponent implements OnInit {
       const req: CreateUserRequest = {
         name:     v.name!,
         email:    v.email!,
+        phoneNumber: v.phoneNumber!,
         password: v.password!,
         role:     v.role as UserRole,
       };

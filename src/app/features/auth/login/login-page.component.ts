@@ -153,7 +153,13 @@ export class LoginPageComponent {
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {
-        this.error.set(err.status === 401 ? 'E-mail ou senha incorretos.' : 'Erro ao conectar. Tente novamente.');
+        const message =
+          err?.error?.message ||
+          (err.status === 401
+            ? 'Usuário ou senha inválidos.'
+            : 'Erro ao conectar. Tente novamente.');
+
+        this.error.set(message);
       }
     });
   }

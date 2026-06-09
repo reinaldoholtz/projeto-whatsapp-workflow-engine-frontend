@@ -24,8 +24,9 @@ export type UserRole = 'ADMIN' | 'CORRETOR' | 'OPERADOR';
 
 export interface User {
   id: number;
-  name: string;
+  name: string;  
   email: string;
+  phoneNumber: string;
   role: UserRole;
   active: boolean;
   createdAt: string;
@@ -35,6 +36,7 @@ export interface User {
 export interface CreateUserRequest {
   name: string;
   email: string;
+  phoneNumber: string;
   password: string;
   role: UserRole;
 }
@@ -42,6 +44,7 @@ export interface CreateUserRequest {
 export interface UpdateUserRequest {
   name?: string;
   email?: string;
+  phoneNumber?: string;
   password?: string;
   role?: UserRole;
   active?: boolean;
