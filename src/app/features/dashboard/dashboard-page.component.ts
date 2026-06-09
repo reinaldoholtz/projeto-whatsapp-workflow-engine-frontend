@@ -179,7 +179,7 @@ export class DashboardPageComponent implements OnInit {
       { label: 'Pausados',           value: s.pausedLeads,     icon: 'pause_circle',  color: 'text-gray-500',    bg: 'bg-gray-100 dark:bg-gray-800'       },
       { label: 'Workflows Ativos',   value: s.activeWorkflows, icon: 'account_tree',  color: 'text-purple-600',  bg: 'bg-purple-50 dark:bg-purple-900/30' },
       { label: 'Taxa de Conversão',  value: s.conversionRate,  icon: 'trending_up',   color: 'text-primary-600', bg: 'bg-primary-50 dark:bg-primary-900/30'},
-      { label: 'Docs Recebidos',     value: s.totalDocuments,  icon: 'folder',        color: 'text-orange-600',  bg: 'bg-orange-50 dark:bg-orange-900/30' },
+      // { label: 'Docs Recebidos',     value: s.totalDocuments,  icon: 'folder',        color: 'text-orange-600',  bg: 'bg-orange-50 dark:bg-orange-900/30' },
     ];
   });
 
