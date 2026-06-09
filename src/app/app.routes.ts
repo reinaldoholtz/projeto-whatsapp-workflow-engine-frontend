@@ -69,11 +69,18 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'users',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/users/users-page.component').then(m => m.UsersPageComponent),
+        title: 'Usuários — CRM WhatsApp',
+      },
+      {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings-page.component').then(m => m.SettingsPageComponent),
         title: 'Configurações — CRM WhatsApp',
-      },      
+      },
     ],
   },
   { path: '**', redirectTo: '/dashboard' },

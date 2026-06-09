@@ -19,6 +19,34 @@ export interface AuthUser {
   name?: string;
 }
 
+// ── Users ─────────────────────────────────────────────────────────────────
+export type UserRole = 'ADMIN' | 'CORRETOR' | 'OPERADOR';
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: UserRole;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
+  active?: boolean;
+}
+
 // ── Leads ─────────────────────────────────────────────────────────────────
 export type LeadStatus = 'ACTIVE' | 'HUMAN_HANDOFF' | 'COMPLETED' | 'LEAVE' | 'PAUSED';
 

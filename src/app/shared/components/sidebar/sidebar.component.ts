@@ -54,7 +54,7 @@ interface NavItem {
         }
       </nav>
 
-      <!-- User / Collapse -->
+      <!-- User info -->
       <div class="border-t border-slate-700/50 p-3">
         @if (!collapsed()) {
           <div class="flex items-center gap-3 px-2 py-2 animate-fade-in">
@@ -78,9 +78,10 @@ export class SidebarComponent {
   collapsed = signal(false);
 
   navItems: NavItem[] = [
-    { label: 'Dashboard',    icon: 'dashboard',        route: '/dashboard'  },
-    { label: 'Leads',        icon: 'people',           route: '/leads'      },
-    { label: 'Workflows',    icon: 'account_tree',     route: '/workflows', adminOnly: true },  
-    { label: 'Configurações',icon: 'settings',         route: '/settings'   },
+    { label: 'Dashboard',    icon: 'dashboard',            route: '/dashboard'  },
+    { label: 'Leads',        icon: 'people',               route: '/leads'      },
+    { label: 'Workflows',    icon: 'account_tree',         route: '/workflows', adminOnly: true },
+    { label: 'Usuários',     icon: 'manage_accounts',      route: '/users',     adminOnly: true },
+    { label: 'Configurações',icon: 'settings',             route: '/settings'   },
   ];
 }
