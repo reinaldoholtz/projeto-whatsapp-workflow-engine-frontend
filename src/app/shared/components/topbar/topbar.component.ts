@@ -12,7 +12,7 @@ import { ThemeService } from '@core/services/theme.service';
                    border-b border-gray-100 dark:border-slate-700 flex items-center px-6 gap-4">
 
       <!-- Search -->
-      <div class="flex-1 max-w-md">
+      <!-- <div class="flex-1 max-w-md">
         <div class="relative">
           <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
             search
@@ -26,7 +26,7 @@ import { ThemeService } from '@core/services/theme.service';
                    transition-colors"
           />
         </div>
-      </div>
+      </div> -->
 
       <div class="flex items-center gap-2 ml-auto">
         <!-- Theme toggle -->
@@ -42,11 +42,11 @@ import { ThemeService } from '@core/services/theme.service';
         </button>
 
         <!-- Notifications -->
-        <button class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400
+        <!-- <button class="w-9 h-9 flex items-center justify-center rounded-lg text-gray-500 dark:text-gray-400
                        hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative">
           <span class="material-icons-round text-xl">notifications</span>
           <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-        </button>
+        </button> -->
 
         <!-- Profile dropdown -->
         <div class="flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-slate-600">
