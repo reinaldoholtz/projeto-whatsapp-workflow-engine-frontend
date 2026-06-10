@@ -24,7 +24,7 @@ export type UserRole = 'ADMIN' | 'CORRETOR' | 'OPERADOR';
 
 export interface User {
   id: number;
-  name: string;  
+  name: string;
   email: string;
   phoneNumber: string;
   role: UserRole;
@@ -156,6 +156,54 @@ export interface CreateDocumentRequest {
   allowedMimeTypes?: string[];
   maxSizeMb?: number;
   required?: boolean;
+}
+
+// ── Lead Disparo ───────────────────────────────────────────────────────────
+export type DisparoStatus =
+  | 'PENDENTE' | 'ENVIADO' | 'NUMERO_INVALIDO'
+  | 'NAO_POSSUI_WHATSAPP' | 'DUPLICADO' | 'ERRO';
+
+export interface LeadPreviewItem {
+  line: number;
+  name: string;
+  phone: string;
+  valid: boolean;
+  error?: string;
+}
+
+export interface DisparoPreviewResponse {
+  runId: string;
+  totalRecords: number;
+  validRecords: number;
+  invalidRecords: number;
+  leads: LeadPreviewItem[];
+  errors: string[];
+}
+
+export interface DisparoStartRequest {
+  workflowId: number;
+  runId: string;
+}
+
+export interface DisparoItemResponse {
+  id: number;
+  leadName: string;
+  phoneNumber: string;
+  status: DisparoStatus;
+  errorDetail: string | null;
+  processedAt: string;
+}
+
+export interface DisparoResultResponse {
+  runId: string;
+  workflowId: number;
+  workflowName: string;
+  total: number;
+  enviados: number;
+  erros: number;
+  duplicados: number;
+  naoTemWhatsapp: number;
+  items: DisparoItemResponse[];
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────
