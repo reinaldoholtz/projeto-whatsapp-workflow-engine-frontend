@@ -136,9 +136,9 @@ const STATUS_CONFIG: Record<DisparoStatus, { label: string; css: string; icon: s
             </h3>
             <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-4 font-mono text-xs text-gray-600 dark:text-gray-300 space-y-1">
               <p class="text-primary-600 dark:text-primary-400 font-semibold">nome;telefone</p>
-              <p>João Silva;+5511999999999</p>
-              <p>Maria Souza;+5511888888888</p>
-              <p>Carlos Lima;+5541977777777</p>
+              <p>João Silva;5511999999999</p>
+              <p>Maria Souza;5511888888888</p>
+              <p>Carlos Lima;5541977777777</p>
             </div>
             <ul class="mt-4 space-y-2 text-xs text-gray-500 dark:text-gray-400">
               <li class="flex items-start gap-2">
@@ -151,7 +151,7 @@ const STATUS_CONFIG: Record<DisparoStatus, { label: string; css: string; icon: s
               </li>
               <li class="flex items-start gap-2">
                 <span class="material-icons-round text-sm text-emerald-500 flex-shrink-0 mt-0.5">check</span>
-                Telefone com código do país (+55...)
+                Telefone com código do país (55...)
               </li>
               <li class="flex items-start gap-2">
                 <span class="material-icons-round text-sm text-amber-500 flex-shrink-0 mt-0.5">warning</span>
