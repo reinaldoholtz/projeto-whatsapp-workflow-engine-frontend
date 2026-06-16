@@ -94,23 +94,44 @@ type TabKey = 'timeline' | 'chat' | 'documents';
 
         <!-- Tabs -->
         <div class="card overflow-hidden">
+
           <!-- Tab Bar -->
-          <div class="flex border-b border-gray-100 dark:border-slate-700">
-            @for (tab of tabs; track tab.key) {
-              <button
-                (click)="activeTab.set(tab.key)"
-                class="flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors"
-                [ngClass]="activeTab() === tab.key
-                  ? 'border-primary-600 text-primary-600 dark:text-primary-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-              >
-                <span class="material-icons-round text-base">{{ tab.icon }}</span>
-                {{ tab.label }}
-                <span class="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded-full">
-                  {{ tab.count() }}
-                </span>
-              </button>
-            }
+          <div class="flex items-center border-b border-gray-100 dark:border-slate-700">
+
+            <!-- Tabs -->
+            <div class="flex flex-1">
+              @for (tab of tabs; track tab.key) {
+                <button
+                  (click)="activeTab.set(tab.key)"
+                  class="flex items-center gap-2 px-5 py-3.5 text-sm font-medium border-b-2 transition-colors"
+                  [ngClass]="activeTab() === tab.key
+                    ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+                >
+                  <span class="material-icons-round text-base">{{ tab.icon }}</span>
+                  {{ tab.label }}
+                  <span class="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 text-xs px-1.5 py-0.5 rounded-full">
+                    {{ tab.count() }}
+                  </span>
+                </button>
+              }
+            </div>
+
+            <!-- Botão Atualizar -->
+            <button
+              (click)="refreshAnswers()"
+              [disabled]="refreshing()"
+              class="flex items-center gap-1.5 mr-4 px-3 py-1.5 text-xs font-medium rounded-lg
+                     text-gray-500 dark:text-gray-400
+                     hover:bg-gray-100 dark:hover:bg-slate-700
+                     hover:text-primary-600 dark:hover:text-primary-400
+                     disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="Buscar últimos registros"
+            >
+              <span class="material-icons-round text-base"
+                    [class.animate-spin]="refreshing()">refresh</span>
+              Atualizar
+            </button>
           </div>
 
           <div class="p-6">
@@ -218,6 +239,7 @@ type TabKey = 'timeline' | 'chat' | 'documents';
                 }
               </div>
             }
+
           </div>
         </div>
       }
@@ -229,14 +251,15 @@ export class LeadDetailsPageComponent implements OnInit {
   private leadService = inject(LeadService);
   private toast       = inject(ToastService);
 
-  loading   = signal(true);
-  detail    = signal<LeadDetail | null>(null);
-  activeTab = signal<TabKey>('timeline');
+  loading    = signal(true);
+  refreshing = signal(false);
+  detail     = signal<LeadDetail | null>(null);
+  activeTab  = signal<TabKey>('timeline');
 
   tabs = [
-    { key: 'timeline'  as TabKey, label: 'Timeline',    icon: 'timeline',     count: () => this.detail()?.answers.length ?? 0   },
-    { key: 'chat'      as TabKey, label: 'Conversa',    icon: 'chat_bubble',  count: () => this.detail()?.answers.length ?? 0   },
-    { key: 'documents' as TabKey, label: 'Documentos',  icon: 'folder',       count: () => this.detail()?.documents.length ?? 0 },
+    { key: 'timeline'  as TabKey, label: 'Timeline',   icon: 'timeline',    count: () => this.detail()?.answers.length ?? 0   },
+    { key: 'chat'      as TabKey, label: 'Conversa',   icon: 'chat_bubble', count: () => this.detail()?.answers.length ?? 0   },
+    { key: 'documents' as TabKey, label: 'Documentos', icon: 'folder',      count: () => this.detail()?.documents.length ?? 0 },
   ];
 
   ngOnInit() {
@@ -244,6 +267,23 @@ export class LeadDetailsPageComponent implements OnInit {
     this.leadService.getById(id).subscribe({
       next:  d => { this.detail.set(d); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  /** Recarrega respostas e documentos do lead sem recarregar a página inteira */
+  refreshAnswers(): void {
+    if (this.refreshing()) return;
+    this.refreshing.set(true);
+    this.leadService.getById(this.id).subscribe({
+      next: d => {
+        this.detail.set(d);
+        this.refreshing.set(false);
+        this.toast.success('Atualizado com sucesso!');
+      },
+      error: () => {
+        this.refreshing.set(false);
+        this.toast.error('Erro ao atualizar.');
+      },
     });
   }
 
