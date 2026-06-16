@@ -75,6 +75,13 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'meta-phones',
+        canActivate: [adminGuard],
+        loadComponent: () =>
+          import('./features/meta-phones/meta-phones-page.component').then(m => m.MetaPhonesPageComponent),
+        title: 'Telefones WhatsApp — CRM WhatsApp',
+      },
+      {
         path: 'users',
         canActivate: [adminGuard],
         loadComponent: () =>
