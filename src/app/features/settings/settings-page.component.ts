@@ -61,9 +61,9 @@ import { AuthService } from '@core/auth/auth.service';
         <h2 class="text-base font-semibold text-gray-900 dark:text-white mb-3">Sobre</h2>
         <div class="space-y-2 text-sm text-gray-500 dark:text-gray-400">
           <div class="flex justify-between"><span>Versão</span><span class="font-medium text-gray-700 dark:text-gray-300">1.0.0</span></div>
-          <div class="flex justify-between"><span>Backend</span><span class="font-medium text-gray-700 dark:text-gray-300">Java 17 + Spring Boot 3</span></div>
+          <!-- <div class="flex justify-between"><span>Backend</span><span class="font-medium text-gray-700 dark:text-gray-300">Java 17 + Spring Boot 3</span></div>
           <div class="flex justify-between"><span>Frontend</span><span class="font-medium text-gray-700 dark:text-gray-300">Angular 19</span></div>
-          <div class="flex justify-between"><span>API</span><span class="font-medium text-gray-700 dark:text-gray-300">Meta WhatsApp Cloud API</span></div>
+          <div class="flex justify-between"><span>API</span><span class="font-medium text-gray-700 dark:text-gray-300">Meta WhatsApp Cloud API</span></div> -->
         </div>
       </div>
     </div>

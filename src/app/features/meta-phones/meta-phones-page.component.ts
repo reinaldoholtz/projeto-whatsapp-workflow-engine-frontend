@@ -152,7 +152,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <span class="material-icons-round text-emerald-600 text-xl">whatsapp</span>
+                <span class="material-icons-round text-emerald-600 text-xl">perm_phone_msg</span>
               </div>
               <div>
                 <h2 class="text-base font-semibold text-gray-900 dark:text-white">

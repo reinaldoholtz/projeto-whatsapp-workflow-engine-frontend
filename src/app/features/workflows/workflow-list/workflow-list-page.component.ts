@@ -62,8 +62,8 @@ import { forkJoin } from 'rxjs';
                 }
                 @if (wf.metaPhoneName) {
                   <div class="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
-                    <span class="material-icons-round text-sm">whatsapp</span>
-                    {{ wf.metaPhoneName }}
+                    <span class="material-icons-round text-sm">perm_phone_msg</span>
+                    WhatsApp API Meta: {{ wf.metaPhoneName }}
                     @if (wf.metaPhoneDisplay) {
                       <span class="text-gray-400">— {{ wf.metaPhoneDisplay }}</span>
                     }
@@ -159,9 +159,8 @@ import { forkJoin } from 'rxjs';
 
             <!-- Corretor responsável -->
             <div>
-              <label class="form-label">Corretor / Usuário responsável</label>
+              <label class="form-label">Responsável</label>
               <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">badge</span>
                 <select formControlName="userId" class="form-input pl-9">
                   <option [ngValue]="null">— Selecione um usuário —</option>
                   @for (u of users(); track u.id) {

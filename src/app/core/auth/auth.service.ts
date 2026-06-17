@@ -54,6 +54,34 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  /**
+   * Verifica se existe refresh token armazenado.
+   * Usado pelo interceptor para decidir se vale a pena tentar renovar
+   * a sessão antes de redirecionar para o login.
+   */
+  hasRefreshToken(): boolean {
+    return !!localStorage.getItem(REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Logout forçado quando a sessão expira (401 sem possibilidade de refresh).
+   * Não dispara chamada HTTP de logout — a sessão já está inválida no servidor.
+   * Redireciona preservando a URL atual via queryParam returnUrl.
+   */
+  forceLogoutToLogin(): void {
+    const wasLoggedIn = this.isLoggedIn();
+    this.clearSession();
+
+    if (wasLoggedIn) {
+      const returnUrl = this.router.routerState.snapshot.url;
+      this.router.navigate(['/auth/login'], {
+        queryParams: returnUrl && returnUrl !== '/' ? { returnUrl } : {},
+      });
+    } else {
+      this.router.navigate(['/auth/login']);
+    }
+  }
+
   getAccessToken(): string | null {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
   }

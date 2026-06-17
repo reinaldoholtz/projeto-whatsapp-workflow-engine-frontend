@@ -1,6 +1,6 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, throwError } from 'rxjs';
+import { catchError, switchMap, throwError, of } from 'rxjs';
 import { AuthService } from '@core/auth/auth.service';
 import { Router } from '@angular/router';
 
@@ -14,6 +14,13 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
   return next(authReq).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && !req.url.includes('/auth/')) {
+
+        // Sem refresh token disponível — sessão já expirada, redireciona direto
+        if (!auth.hasRefreshToken()) {
+          auth.forceLogoutToLogin();
+          return throwError(() => err);
+        }
+
         return auth.refreshToken().pipe(
           switchMap(() => {
             const newToken = auth.getAccessToken();
@@ -21,7 +28,8 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
             return next(retried);
           }),
           catchError(() => {
-            auth.logout();
+            // Refresh token também expirou/inválido — força logout e redireciona
+            auth.forceLogoutToLogin();
             return throwError(() => err);
           })
         );
