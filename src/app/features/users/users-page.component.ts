@@ -232,18 +232,37 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
             <!-- Phone -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-                Telefone *
+                Telefone
               </label>
 
               <input
                 formControlName="phoneNumber"
-                placeholder="+55 11 99999-9999"
+                placeholder="5511999999999"
                 class="form-input"
               />
 
               @if (form.get('phoneNumber')?.invalid && form.get('phoneNumber')?.touched) {
                 <p class="text-red-500 text-xs mt-1">
                   Telefone é obrigatório
+                </p>
+              }
+            </div>
+
+            <!-- WhatsApp Phone -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                WhatsApp *
+              </label>
+
+              <input
+                formControlName="whatsappPhone"
+                placeholder="5511999999999"
+                class="form-input"
+              />
+
+              @if (form.get('whatsappPhone')?.invalid && form.get('whatsappPhone')?.touched) {
+                <p class="text-red-500 text-xs mt-1">
+                  WhatsApp é obrigatório
                 </p>
               }
             </div>
@@ -307,7 +326,7 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
                     [ngClass]="isActiveForm() ? 'translate-x-6' : 'translate-x-1'"></span>
                 </button>
               </div>
-            }
+            }        
 
             <!-- Buttons -->
             <div class="flex gap-3 pt-2">
@@ -387,7 +406,8 @@ export class UsersPageComponent implements OnInit {
 
   form = this.fb.group({
     name:     ['', Validators.required],
-    phoneNumber: ['', Validators.required],
+    phoneNumber: [''],
+    whatsappPhone: ['', Validators.required],
     email:    ['', [Validators.required, Validators.email]],
     password: [''],
     role:     [null as UserRole | null, Validators.required],
@@ -469,13 +489,14 @@ export class UsersPageComponent implements OnInit {
 
   // ── Form actions ─────────────────────────────────────────────────────────
 
-  openForm(user?: User): void {
+  openForm(user?: User): void {  
     this.editing.set(user ?? null);
     this.showPass.set(false);
     this.form.reset({
       name:     user?.name ?? '',
       email:    user?.email ?? '',
       phoneNumber: user?.phoneNumber ?? '',
+      whatsappPhone: user?.whatsappPhone ?? '',
       password: '',
       role:     user?.role ?? null,
       active:   user?.active ?? true,
@@ -487,7 +508,7 @@ export class UsersPageComponent implements OnInit {
       pwCtrl.setValidators([Validators.minLength(6)]);
     }
     pwCtrl.updateValueAndValidity();
-    this.showForm.set(true);
+    this.showForm.set(true);    
   }
 
   closeForm(): void {
@@ -505,6 +526,7 @@ export class UsersPageComponent implements OnInit {
         name:   v.name   || undefined,
         email:  v.email  || undefined,
         phoneNumber: v.phoneNumber || undefined,
+        whatsappPhone: v.whatsappPhone || undefined,
         role:   (v.role as UserRole) || undefined,
         active: v.active ?? undefined,
       };
@@ -527,6 +549,7 @@ export class UsersPageComponent implements OnInit {
         name:     v.name!,
         email:    v.email!,
         phoneNumber: v.phoneNumber!,
+        whatsappPhone: v.whatsappPhone!,
         password: v.password!,
         role:     v.role as UserRole,
       };

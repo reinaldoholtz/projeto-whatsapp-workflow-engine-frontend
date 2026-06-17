@@ -19,6 +19,7 @@ export interface User {
   id: number; 
   name: string;
   phoneNumber: string;
+  whatsappPhone: string;
   email: string;
   role: UserRole; 
   active: boolean;
@@ -27,12 +28,13 @@ export interface User {
 }
 
 export interface CreateUserRequest {
-  name: string; phoneNumber?: string; email: string; password: string; role: UserRole;
+  name: string; phoneNumber?: string; whatsappPhone?: string; email: string; password: string; role: UserRole;
 }
 
 export interface UpdateUserRequest {
   name?: string; 
   phoneNumber?: string;
+  whatsappPhone?: string;
   email?: string; 
   password?: string;
   role?: UserRole; active?: boolean;
