@@ -297,7 +297,7 @@ export class MetaPhonesPageComponent implements OnInit {
       displayPhoneNumber: phone?.displayPhoneNumber ?? '',
       phoneNumberId:      phone?.phoneNumberId ?? '',
       businessAccountId:  phone?.businessAccountId ?? '',
-      accessToken:        '',  // never pre-fill token for security
+      accessToken:        phone?.accessToken ?? '',
     });
     this.showForm.set(true);
   }

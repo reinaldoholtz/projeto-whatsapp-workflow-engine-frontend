@@ -100,6 +100,12 @@ import { forkJoin } from 'rxjs';
                     {{ wf.active ? 'toggle_on' : 'toggle_off' }}
                   </span>
                 </button>
+                <button (click)="confirmDelete(wf)"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                         hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 transition-colors"
+                  title="Excluir">
+                  <span class="material-icons-round text-base">delete</span>
+                </button>
               </div>
             </div>
           } @empty {
@@ -177,11 +183,17 @@ import { forkJoin } from 'rxjs';
                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-base">whatsapp</span>
                 <select formControlName="metaPhoneId" class="form-input pl-9">
                   <option [ngValue]="null">— Selecione um número —</option>
-                  @for (p of activePhones(); track p.id) {
-                    <option [ngValue]="p.id">{{ p.name }} — {{ p.displayPhoneNumber }}</option>
+                  @for (p of selectablePhones(); track p.id) {
+                    <option [ngValue]="p.id" [disabled]="isPhoneTakenByOther(p.id)">
+                      {{ p.name }} — {{ p.displayPhoneNumber }}
+                      @if (isPhoneTakenByOther(p.id)) { (já em uso) }
+                    </option>
                   }
                 </select>
               </div>
+              <p class="text-xs text-gray-400 mt-1">
+                Cada número WhatsApp só pode estar associado a um único workflow.
+              </p>
               @if (activePhones().length === 0) {
                 <p class="text-xs text-amber-500 mt-1 flex items-center gap-1">
                   <span class="material-icons-round text-sm">warning</span>
@@ -208,6 +220,37 @@ import { forkJoin } from 'rxjs';
         </div>
       </div>
     }
+
+    <!-- ── Confirm Delete Dialog ────────────────────────────────────────────── -->
+    @if (workflowToDelete()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slide-in text-center">
+          <div class="w-14 h-14 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span class="material-icons-round text-red-600 text-2xl">delete_forever</span>
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Excluir workflow?</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Você está prestes a excluir
+            <strong class="text-gray-800 dark:text-gray-200">{{ workflowToDelete()!.name }}</strong>.
+          </p>
+          <p class="text-xs text-gray-400 mb-6">
+            Se houver leads atendidos por este workflow, a exclusão será bloqueada
+            e você poderá apenas desativá-lo.
+          </p>
+          <div class="flex gap-3">
+            <button (click)="workflowToDelete.set(null)" class="btn-secondary flex-1 justify-center">
+              Cancelar
+            </button>
+            <button (click)="deleteWorkflow()" [disabled]="deleting()" class="btn-danger flex-1 justify-center">
+              @if (deleting()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
+              Excluir
+            </button>
+          </div>
+        </div>
+      </div>
+    }
   `,
   styles: [`
     .form-label { @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5; }
@@ -225,13 +268,15 @@ export class WorkflowListPageComponent implements OnInit {
   private toast             = inject(ToastService);
   private fb                = inject(FormBuilder);
 
-  loading      = signal(true);
-  saving       = signal(false);
-  workflows    = signal<Workflow[]>([]);
-  activePhones = signal<MetaPhone[]>([]);
-  users        = signal<User[]>([]);
-  showForm     = signal(false);
-  editing      = signal<Workflow | null>(null);
+  loading          = signal(true);
+  saving           = signal(false);
+  deleting         = signal(false);
+  workflows        = signal<Workflow[]>([]);
+  activePhones     = signal<MetaPhone[]>([]);
+  users            = signal<User[]>([]);
+  showForm         = signal(false);
+  editing          = signal<Workflow | null>(null);
+  workflowToDelete = signal<Workflow | null>(null);
 
   form = this.fb.group({
     name:        ['', Validators.required],
@@ -257,6 +302,35 @@ export class WorkflowListPageComponent implements OnInit {
       },
       error: () => this.loading.set(false),
     });
+  }
+
+  /**
+   * Números a exibir no select: ativos + o número já associado ao workflow
+   * em edição (mesmo que não esteja na lista de ativos), para não "desaparecer"
+   * a seleção atual ao abrir o formulário de edição.
+   */
+  selectablePhones() {
+    const phones = this.activePhones();
+    const current = this.editing()?.metaPhoneId;
+    if (current && !phones.some(p => p.id === current)) {
+      const fromWorkflow = this.editing();
+      if (fromWorkflow?.metaPhoneId && fromWorkflow?.metaPhoneName) {
+        return [...phones, {
+          id: fromWorkflow.metaPhoneId,
+          name: fromWorkflow.metaPhoneName,
+          displayPhoneNumber: fromWorkflow.metaPhoneDisplay ?? '',
+        } as MetaPhone];
+      }
+    }
+    return phones;
+  }
+
+  /** Indica se o número já pertence a outro workflow (não o que está sendo editado) */
+  isPhoneTakenByOther(phoneId: number): boolean {
+    const editingId = this.editing()?.id;
+    return this.workflows().some(w =>
+      w.metaPhoneId === phoneId && w.id !== editingId
+    );
   }
 
   openForm(wf?: Workflow) {
@@ -291,6 +365,7 @@ export class WorkflowListPageComponent implements OnInit {
         this.closeForm(); this.saving.set(false); this.load();
       },
       error: (e: any) => {
+        // 409: número WhatsApp já em uso por outro workflow
         this.toast.error(e?.error?.message ?? 'Erro ao salvar.');
         this.saving.set(false);
       },
@@ -298,15 +373,33 @@ export class WorkflowListPageComponent implements OnInit {
   }
 
   toggleActive(wf: Workflow) {
-    const req = {
-      name:        wf.name,
-      description: wf.description ?? '',
-      userId:      wf.userId      ?? undefined,
-      metaPhoneId: wf.metaPhoneId ?? undefined,
-    };
-    this.wfService.update(wf.id, req).subscribe({
+    this.wfService.toggleActive(wf.id).subscribe({
       next: () => { this.toast.success('Status atualizado!'); this.load(); },
       error: () => this.toast.error('Erro ao atualizar.'),
+    });
+  }
+
+  confirmDelete(wf: Workflow) {
+    this.workflowToDelete.set(wf);
+  }
+
+  deleteWorkflow() {
+    const wf = this.workflowToDelete();
+    if (!wf) return;
+    this.deleting.set(true);
+    this.wfService.delete(wf.id).subscribe({
+      next: () => {
+        this.toast.success('Workflow excluído com sucesso!');
+        this.workflowToDelete.set(null);
+        this.deleting.set(false);
+        this.load();
+      },
+      error: (e: any) => {
+        // 409: existem LeadSessions vinculadas — exclusão bloqueada pelo backend
+        this.toast.error(e?.error?.message ?? 'Erro ao excluir workflow.');
+        this.workflowToDelete.set(null);
+        this.deleting.set(false);
+      },
     });
   }
 }
