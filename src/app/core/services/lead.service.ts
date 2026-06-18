@@ -26,8 +26,13 @@ export class LeadService {
     return this.http.post<void>(`${this.base}/${id}/resume`, {});
   }
 
-  handoff(id: number) {
-    return this.http.post<void>(`${this.base}/${id}/handoff`, {});
+  /**
+   * Transfere o lead para atendimento humano.
+   * @param userId ID do especialista escolhido (opcional). Se omitido,
+   *               o backend usa o corretor responsável pelo workflow do lead.
+   */
+  handoff(id: number, userId?: number) {
+    return this.http.post<void>(`${this.base}/${id}/handoff`, userId ? { userId } : {});
   }
 
   generatePdf(id: number) {

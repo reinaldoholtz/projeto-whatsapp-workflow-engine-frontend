@@ -18,7 +18,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1>Telefones WhatsApp</h1>
+          <h1>Canais WhatsApp</h1>
           <p>Gerencie os números Meta Cloud API conectados ao sistema</p>
         </div>
         <button (click)="openForm()" class="btn-primary">
@@ -194,10 +194,10 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
               }
             </div>
 
-            <div>
+            <!-- <div>
               <label class="form-label">Business Account ID (WABA)</label>
               <input formControlName="businessAccountId" placeholder="Opcional" class="form-input font-mono text-sm" />
-            </div>
+            </div> -->
 
             <div>
               <label class="form-label">Access Token específico</label>

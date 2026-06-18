@@ -4,13 +4,14 @@ import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { LeadService } from '@core/services/lead.service';
+import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
-import { LeadSession, LeadStatus } from '@shared/models';
+import { LeadSession, LeadStatus, User } from '@shared/models';
 import { StatusBadgeComponent } from '@shared/components/badge/status-badge.component';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 
@@ -18,7 +19,7 @@ import { startWith } from 'rxjs';
   selector: 'app-lead-list-page',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink, DatePipe,
+    ReactiveFormsModule, RouterLink, DatePipe, NgClass,
     MatTableModule, MatPaginatorModule, MatMenuModule, MatDialogModule,
     StatusBadgeComponent, SkeletonComponent,
   ],
@@ -145,7 +146,7 @@ import { startWith } from 'rxjs';
                     </button>
 
                     <mat-menu #menu="matMenu">
-                      @if (lead.status === 'ACTIVE') {
+                      <!-- @if (lead.status === 'ACTIVE') {
                         <button mat-menu-item (click)="pause(lead)">
                           <span class="material-icons-round text-amber-500 text-base mr-2">pause</span>
                           Pausar
@@ -156,15 +157,43 @@ import { startWith } from 'rxjs';
                           <span class="material-icons-round text-emerald-500 text-base mr-2">play_arrow</span>
                           Retomar
                         </button>
-                      }
-                      <button mat-menu-item (click)="handoff(lead)">
+                      } -->
+
+                      <!-- Submenu: Transferir para Especialista -->
+                      <button mat-menu-item [matMenuTriggerFor]="specialistMenu">
                         <span class="material-icons-round text-blue-500 text-base mr-2">support_agent</span>
                         Transferir para Especialista
                       </button>
+
                       <button mat-menu-item (click)="generatePdf(lead)">
                         <span class="material-icons-round text-red-500 text-base mr-2">picture_as_pdf</span>
                         Gerar PDF
                       </button>
+                    </mat-menu>
+
+                    <!-- Submenu com a lista de especialistas (Users) -->
+                    <mat-menu #specialistMenu="matMenu">
+                      @if (loadingUsers()) {
+                        <div class="px-4 py-2 text-sm text-gray-400 flex items-center gap-2">
+                          <span class="w-3.5 h-3.5 border-2 border-gray-300 border-t-primary-500 rounded-full animate-spin"></span>
+                          Carregando...
+                        </div>
+                      } @else {
+                        @for (u of specialists(); track u.id) {
+                          <button mat-menu-item (click)="handoffTo(lead, u)">
+                            <span class="material-icons-round text-base mr-2"
+                              [ngClass]="hasWhatsapp(u) ? 'text-emerald-500' : 'text-gray-300'">
+                              account_circle
+                            </span>
+                            <span class="flex flex-col items-start leading-tight">
+                              <span>{{ u.name }}</span>
+                              <span class="text-xs text-gray-400">{{ roleLabel(u.role) }}</span>
+                            </span>
+                          </button>
+                        } @empty {
+                          <div class="px-4 py-2 text-sm text-gray-400">Nenhum usuário cadastrado</div>
+                        }
+                      }
                     </mat-menu>
                   </div>
                 </td>
@@ -204,13 +233,16 @@ import { startWith } from 'rxjs';
 })
 export class LeadListPageComponent implements OnInit {
   private leadService = inject(LeadService);
+  private userService = inject(UserService);
   private toast       = inject(ToastService);
   private fb          = inject(FormBuilder);
 
-  loading    = signal(true);
-  leads      = signal<LeadSession[]>([]);
-  pageIndex  = signal(0);
-  pageSize   = 10;
+  loading      = signal(true);
+  loadingUsers = signal(true);
+  leads        = signal<LeadSession[]>([]);
+  specialists  = signal<User[]>([]);
+  pageIndex    = signal(0);
+  pageSize     = 10;
 
   columns = ['profile', 'status', 'workflow', 'step', 'lastInteraction', 'createdAt', 'actions'];
 
@@ -230,9 +262,9 @@ export class LeadListPageComponent implements OnInit {
     }
   );
 
-  filteredLeads = computed(() => {  
+  filteredLeads = computed(() => {
     const { search, status, workflow, step } = this.filterValues();
-    return this.leads().filter(l => {  
+    return this.leads().filter(l => {
       const text = (search || '').toLowerCase();
       const matchSearch = !text ||
         (l.profileName?.toLowerCase().includes(text) ?? false) ||
@@ -240,7 +272,7 @@ export class LeadListPageComponent implements OnInit {
       const matchStatus   = !status   || l.status === status;
       const matchWorkflow = !workflow || (l.workflow?.toLowerCase().includes((workflow || '').toLowerCase()) ?? false);
       const matchStep     = !step     || (l.currentStep?.toLowerCase().includes((step || '').toLowerCase()) ?? false);
-      
+
       return matchSearch && matchStatus && matchWorkflow && matchStep;
     });
   });
@@ -252,16 +284,24 @@ export class LeadListPageComponent implements OnInit {
 
   ngOnInit() {
     this.loadLeads();
+    this.loadSpecialists();
     this.filterForm.valueChanges.subscribe(() => this.pageIndex.set(0));
   }
 
   loadLeads() {
     this.loading.set(true);
     this.leadService.getAll().subscribe({
-      next:  l => { 
-        console.log('LEADS API', l);
-        this.leads.set(l); this.loading.set(false); },
+      next:  l => { this.leads.set(l); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  /** Carrega a lista de usuários (especialistas) para o submenu de transferência */
+  loadSpecialists() {
+    this.loadingUsers.set(true);
+    this.userService.getAll().subscribe({
+      next:  u => { this.specialists.set(u.filter(x => x.active)); this.loadingUsers.set(false); },
+      error: () => this.loadingUsers.set(false),
     });
   }
 
@@ -284,10 +324,11 @@ export class LeadListPageComponent implements OnInit {
     });
   }
 
-  handoff(lead: LeadSession) {
-    this.leadService.handoff(lead.id).subscribe({
-      next:  () => { this.toast.success('Transferido para especialista!'); this.loadLeads(); },
-      error: () => this.toast.error('Erro ao transferir.'),
+  /** Transfere o lead para o especialista escolhido no submenu */
+  handoffTo(lead: LeadSession, specialist: User) {
+    this.leadService.handoff(lead.id, specialist.id).subscribe({
+      next:  () => { this.toast.success(`Transferido para ${specialist.name}!`); this.loadLeads(); },
+      error: (e: any) => this.toast.error(e?.error?.message ?? 'Erro ao transferir.'),
     });
   }
 
@@ -296,5 +337,20 @@ export class LeadListPageComponent implements OnInit {
       next:  () => this.toast.success('PDF sendo gerado...'),
       error: () => this.toast.error('Erro ao gerar PDF.'),
     });
+  }
+
+  hasWhatsapp(_u: User): boolean {
+    // Reservado para indicar visualmente especialistas sem whatsappPhone configurado,
+    // caso esse campo seja exposto futuramente no DTO de User do frontend.
+    return true;
+  }
+
+  roleLabel(role: string): string {
+    const map: Record<string, string> = {
+      ADMIN:    'Administrador',
+      CORRETOR: 'Corretor',
+      OPERADOR: 'Operador',
+    };
+    return map[role] ?? role;
   }
 }

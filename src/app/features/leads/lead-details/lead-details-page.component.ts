@@ -71,7 +71,7 @@ type TabKey = 'timeline' | 'chat' | 'documents';
             </div>
 
             <!-- Actions -->
-            <div class="flex flex-wrap gap-2">
+            <!-- <div class="flex flex-wrap gap-2">
               @if (detail()!.session.status === 'ACTIVE') {
                 <button (click)="pause()" class="btn-secondary text-amber-600 border-amber-200">
                   <span class="material-icons-round text-base">pause</span> Pausar
@@ -82,13 +82,7 @@ type TabKey = 'timeline' | 'chat' | 'documents';
                   <span class="material-icons-round text-base">play_arrow</span> Retomar
                 </button>
               }
-              <button (click)="handoff()" class="btn-secondary">
-                <span class="material-icons-round text-base">support_agent</span> Especialista
-              </button>
-              <button (click)="generatePdf()" class="btn-primary">
-                <span class="material-icons-round text-base">picture_as_pdf</span> PDF
-              </button>
-            </div>
+            </div> -->
           </div>
         </div>
 

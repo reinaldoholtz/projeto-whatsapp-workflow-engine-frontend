@@ -76,7 +76,7 @@ export class SidebarComponent {
     { label: 'Leads',              icon: 'people',           route: '/leads'       },
     { label: 'Disparar Leads',     icon: 'send',             route: '/lead-disparo', dividerBefore: true },
     { label: 'Workflows',          icon: 'account_tree',     route: '/workflows',   adminOnly: true, dividerBefore: true },
-    { label: 'Telefones WhatsApp', icon: 'perm_phone_msg',   route: '/meta-phones', adminOnly: true },
+    { label: 'Canais WhatsApp',    icon: 'perm_phone_msg',   route: '/meta-phones', adminOnly: true },
     { label: 'Usuários',           icon: 'manage_accounts',  route: '/users',       adminOnly: true },
     { label: 'Configurações',      icon: 'settings',         route: '/settings',    dividerBefore: true },
   ];
