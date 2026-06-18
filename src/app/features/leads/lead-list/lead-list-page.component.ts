@@ -8,10 +8,10 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { LeadService } from '@core/services/lead.service';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
-import { LeadSession, LeadStatus, User } from '@shared/models';
+import { LeadSession, User } from '@shared/models';
 import { StatusBadgeComponent } from '@shared/components/badge/status-badge.component';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 
@@ -19,18 +19,31 @@ import { startWith } from 'rxjs';
   selector: 'app-lead-list-page',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink, DatePipe, NgClass,
+    ReactiveFormsModule, RouterLink, DatePipe,
     MatTableModule, MatPaginatorModule, MatMenuModule, MatDialogModule,
     StatusBadgeComponent, SkeletonComponent,
   ],
   template: `
     <div class="space-y-5">
+
       <!-- Header -->
       <div class="page-header">
         <div>
           <h1>Leads</h1>
           <p>{{ filteredLeads().length }} lead(s) encontrado(s)</p>
         </div>
+        <button
+          (click)="refresh()"
+          [disabled]="loading()"
+          class="btn-secondary"
+          title="Atualizar lista de leads"
+        >
+          <span
+            class="material-icons-round text-base"
+            [class.animate-spin]="loading()"
+          >refresh</span>
+          Atualizar
+        </button>
       </div>
 
       <!-- Filters -->
@@ -146,19 +159,6 @@ import { startWith } from 'rxjs';
                     </button>
 
                     <mat-menu #menu="matMenu">
-                      <!-- @if (lead.status === 'ACTIVE') {
-                        <button mat-menu-item (click)="pause(lead)">
-                          <span class="material-icons-round text-amber-500 text-base mr-2">pause</span>
-                          Pausar
-                        </button>
-                      }
-                      @if (lead.status === 'PAUSED') {
-                        <button mat-menu-item (click)="resume(lead)">
-                          <span class="material-icons-round text-emerald-500 text-base mr-2">play_arrow</span>
-                          Retomar
-                        </button>
-                      } -->
-
                       <!-- Submenu: Transferir para Especialista -->
                       <button mat-menu-item [matMenuTriggerFor]="specialistMenu">
                         <span class="material-icons-round text-blue-500 text-base mr-2">support_agent</span>
@@ -181,8 +181,7 @@ import { startWith } from 'rxjs';
                       } @else {
                         @for (u of specialists(); track u.id) {
                           <button mat-menu-item (click)="handoffTo(lead, u)">
-                            <span class="material-icons-round text-base mr-2"
-                              [ngClass]="hasWhatsapp(u) ? 'text-emerald-500' : 'text-gray-300'">
+                            <span class="material-icons-round text-base mr-2 text-emerald-500">
                               account_circle
                             </span>
                             <span class="flex flex-col items-start leading-tight">
@@ -257,22 +256,19 @@ export class LeadListPageComponent implements OnInit {
     this.filterForm.valueChanges.pipe(
       startWith(this.filterForm.getRawValue())
     ),
-    {
-      initialValue: this.filterForm.getRawValue()
-    }
+    { initialValue: this.filterForm.getRawValue() }
   );
 
   filteredLeads = computed(() => {
     const { search, status, workflow, step } = this.filterValues();
     return this.leads().filter(l => {
       const text = (search || '').toLowerCase();
-      const matchSearch = !text ||
+      const matchSearch   = !text ||
         (l.profileName?.toLowerCase().includes(text) ?? false) ||
         l.phoneNumber.includes(text);
       const matchStatus   = !status   || l.status === status;
       const matchWorkflow = !workflow || (l.workflow?.toLowerCase().includes((workflow || '').toLowerCase()) ?? false);
       const matchStep     = !step     || (l.currentStep?.toLowerCase().includes((step || '').toLowerCase()) ?? false);
-
       return matchSearch && matchStatus && matchWorkflow && matchStep;
     });
   });
@@ -288,6 +284,12 @@ export class LeadListPageComponent implements OnInit {
     this.filterForm.valueChanges.subscribe(() => this.pageIndex.set(0));
   }
 
+  /** Recarrega a lista de leads — usado pelo botão Atualizar do header */
+  refresh(): void {
+    this.loadLeads();
+    this.toast.success('Lista de leads atualizada!');
+  }
+
   loadLeads() {
     this.loading.set(true);
     this.leadService.getAll().subscribe({
@@ -296,7 +298,6 @@ export class LeadListPageComponent implements OnInit {
     });
   }
 
-  /** Carrega a lista de usuários (especialistas) para o submenu de transferência */
   loadSpecialists() {
     this.loadingUsers.set(true);
     this.userService.getAll().subscribe({
@@ -324,7 +325,6 @@ export class LeadListPageComponent implements OnInit {
     });
   }
 
-  /** Transfere o lead para o especialista escolhido no submenu */
   handoffTo(lead: LeadSession, specialist: User) {
     this.leadService.handoff(lead.id, specialist.id).subscribe({
       next:  () => { this.toast.success(`Transferido para ${specialist.name}!`); this.loadLeads(); },
@@ -337,12 +337,6 @@ export class LeadListPageComponent implements OnInit {
       next:  () => this.toast.success('PDF sendo gerado...'),
       error: () => this.toast.error('Erro ao gerar PDF.'),
     });
-  }
-
-  hasWhatsapp(_u: User): boolean {
-    // Reservado para indicar visualmente especialistas sem whatsappPhone configurado,
-    // caso esse campo seja exposto futuramente no DTO de User do frontend.
-    return true;
   }
 
   roleLabel(role: string): string {
