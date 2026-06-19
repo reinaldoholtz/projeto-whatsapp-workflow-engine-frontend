@@ -16,58 +16,43 @@ export interface AuthUser {
 export type UserRole = 'ADMIN' | 'CORRETOR' | 'OPERADOR';
 
 export interface User {
-  id: number; 
+  id: number;
   name: string;
   phoneNumber: string;
   whatsappPhone: string;
   email: string;
-  role: UserRole; 
-  active: boolean;
-  createdAt: string; 
-  updatedAt: string;
-}
-
-export interface CreateUserRequest {
-  name: string; phoneNumber?: string; whatsappPhone?: string; email: string; password: string; role: UserRole;
-}
-
-export interface UpdateUserRequest {
-  name?: string; 
-  phoneNumber?: string;
-  whatsappPhone?: string;
-  email?: string; 
-  password?: string;
-  role?: UserRole; active?: boolean;
-}
-
-// ── MetaPhone ─────────────────────────────────────────────────────────────
-export interface MetaPhone {
-  id: number;
-  name: string;
-  displayPhoneNumber: string;
-  phoneNumberId: string;
-  businessAccountId: string | null;
-  accessToken: string | null;
+  role: UserRole;
   active: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
+export interface CreateUserRequest {
+  name: string; phoneNumber?: string; whatsappPhone?: string;
+  email: string; password: string; role: UserRole;
+}
+
+export interface UpdateUserRequest {
+  name?: string; phoneNumber?: string; whatsappPhone?: string;
+  email?: string; password?: string; role?: UserRole; active?: boolean;
+}
+
+// ── MetaPhone ─────────────────────────────────────────────────────────────
+export interface MetaPhone {
+  id: number; name: string; displayPhoneNumber: string;
+  phoneNumberId: string; businessAccountId: string | null;
+  accessToken: string | null; active: boolean;
+  createdAt: string; updatedAt: string;
+}
+
 export interface CreateMetaPhoneRequest {
-  name: string;
-  displayPhoneNumber: string;
-  phoneNumberId: string;
-  businessAccountId?: string;
-  accessToken?: string;
+  name: string; displayPhoneNumber: string; phoneNumberId: string;
+  businessAccountId?: string; accessToken?: string;
 }
 
 export interface UpdateMetaPhoneRequest {
-  name?: string;
-  displayPhoneNumber?: string;
-  phoneNumberId?: string;
-  businessAccountId?: string;
-  accessToken?: string;
-  active?: boolean;
+  name?: string; displayPhoneNumber?: string; phoneNumberId?: string;
+  businessAccountId?: string; accessToken?: string; active?: boolean;
 }
 
 // ── Leads ─────────────────────────────────────────────────────────────────
@@ -123,8 +108,7 @@ export interface WorkflowRequiredDocument {
 }
 
 export interface CreateWorkflowRequest {
-  name: string; description?: string;
-  userId?: number; metaPhoneId?: number;
+  name: string; description?: string; userId?: number; metaPhoneId?: number;
 }
 
 export interface CreateStepRequest {
@@ -141,8 +125,11 @@ export interface CreateDocumentRequest {
 
 // ── Lead Disparo ───────────────────────────────────────────────────────────
 export type DisparoStatus =
-  | 'PENDENTE' | 'ENVIADO' | 'NUMERO_INVALIDO'
-  | 'NAO_POSSUI_WHATSAPP' | 'DUPLICADO' | 'ERRO';
+  | 'PENDENTE' | 'ENVIADO' | 'ENTREGUE' | 'LIDO'
+  | 'NUMERO_INVALIDO' | 'NAO_POSSUI_WHATSAPP' | 'DUPLICADO' | 'ERRO';
+
+export type BatchStatus =
+  | 'PENDENTE' | 'AGENDADO' | 'PROCESSANDO' | 'FINALIZADO' | 'ERRO' | 'CANCELADO';
 
 export interface LeadPreviewItem {
   line: number; name: string; phone: string; valid: boolean; error?: string;
@@ -153,17 +140,63 @@ export interface DisparoPreviewResponse {
   invalidRecords: number; leads: LeadPreviewItem[]; errors: string[];
 }
 
-export interface DisparoStartRequest { workflowId: number; runId: string; }
+export interface DisparoStartRequest {
+  workflowId: number;
+  runId: string;
+  fileName: string;
+  batchSize: number;
+  intervalMinutes: number;
+  scheduledAt?: string | null;
+}
 
 export interface DisparoItemResponse {
   id: number; leadName: string; phoneNumber: string;
-  status: DisparoStatus; errorDetail: string | null; processedAt: string;
+  status: DisparoStatus; errorDetail: string | null;
+  processedAt: string;
 }
 
 export interface DisparoResultResponse {
   runId: string; workflowId: number; workflowName: string; total: number;
   enviados: number; erros: number; duplicados: number; naoTemWhatsapp: number;
   items: DisparoItemResponse[];
+}
+
+// ── Lead Batch (Histórico) ────────────────────────────────────────────────
+export interface LeadBatchSummary {
+  id: number;
+  fileName: string;
+  runId: string;
+  workflowId: number | null;
+  workflowName: string | null;
+  status: BatchStatus;
+  totalRecords: number;
+  processedRecords: number;
+  successRecords: number;
+  errorRecords: number;
+  batchSize: number;
+  intervalMinutes: number;
+  scheduledAt: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdAt: string;
+  progressPct: number;
+}
+
+export interface DisparoItemSummary {
+  id: number;
+  leadName: string | null;
+  phoneNumber: string;
+  status: string;
+  errorDetail: string | null;
+  whatsappMessageId: string | null;
+  processedAt: string;
+  deliveredAt: string | null;
+  readAt: string | null;
+}
+
+export interface LeadBatchDetail {
+  batch: LeadBatchSummary;
+  items: DisparoItemSummary[];
 }
 
 // ── Dashboard ─────────────────────────────────────────────────────────────

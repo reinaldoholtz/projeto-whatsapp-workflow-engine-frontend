@@ -46,9 +46,20 @@ export const routes: Routes = [
       },
       {
         path: 'lead-disparo',
-        loadComponent: () =>
-          import('./features/lead-disparo/lead-disparo-page.component').then(m => m.LeadDisparoPageComponent),
-        title: 'Disparar Leads — CRM WhatsApp',
+        children: [
+          {
+            path: '',
+            loadComponent: () =>
+              import('./features/lead-disparo/lead-disparo-page.component').then(m => m.LeadDisparoPageComponent),
+            title: 'Disparar Leads — CRM WhatsApp',
+          },
+          {
+            path: 'historico',
+            loadComponent: () =>
+              import('./features/lead-disparo/lead-disparo-historico-page.component').then(m => m.LeadDisparoHistoricoPageComponent),
+            title: 'Histórico de Disparos — CRM WhatsApp',
+          },
+        ],
       },
       {
         path: 'workflows',

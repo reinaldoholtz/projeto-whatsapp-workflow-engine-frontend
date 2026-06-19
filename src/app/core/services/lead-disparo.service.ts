@@ -2,9 +2,8 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import {
-  DisparoPreviewResponse,
-  DisparoStartRequest,
-  DisparoResultResponse
+  DisparoPreviewResponse, DisparoStartRequest,
+  DisparoResultResponse, LeadBatchSummary, LeadBatchDetail
 } from '@shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -20,10 +19,21 @@ export class LeadDisparoService {
   }
 
   start(req: DisparoStartRequest) {
-    return this.http.post<{ runId: string; message: string }>(`${this.base}/start`, req);
+    return this.http.post<{ batchId: number; runId: string; status: string; scheduled: boolean; message: string }>(
+      `${this.base}/start`, req
+    );
   }
 
   getResult(runId: string) {
     return this.http.get<DisparoResultResponse>(`${this.base}/result/${runId}`);
+  }
+
+  // ── Histórico ─────────────────────────────────────────────────────────────
+  listBatches() {
+    return this.http.get<LeadBatchSummary[]>(`${this.base}/batches`);
+  }
+
+  getBatch(batchId: number) {
+    return this.http.get<LeadBatchDetail>(`${this.base}/batches/${batchId}`);
   }
 }
