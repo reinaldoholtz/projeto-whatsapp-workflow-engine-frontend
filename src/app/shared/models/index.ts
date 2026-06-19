@@ -59,7 +59,7 @@ export interface UpdateMetaPhoneRequest {
 export type LeadStatus = 'ACTIVE' | 'HUMAN_HANDOFF' | 'COMPLETED' | 'LEAVE' | 'PAUSED';
 
 export interface LeadSession {
-  id: number; phoneNumber: string; profileName: string | null;
+  id: number; phoneNumber: string; profileName: string | null; leadName: string | null;
   status: LeadStatus; currentStep: string | null; workflow: string | null;
   lastInteraction: string | null; createdAt: string;
 }
