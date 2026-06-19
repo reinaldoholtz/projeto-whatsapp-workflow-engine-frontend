@@ -48,7 +48,7 @@ type TabKey = 'timeline' | 'chat' | 'documents';
 
               <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-4">
                 <div>
-                  <p class="text-xs text-gray-400 uppercase tracking-wider">Nome do Disparo</p>
+                  <p class="text-xs text-gray-400 uppercase tracking-wider">Nome no Disparo</p>
                   <p class="text-sm font-medium text-gray-800 dark:text-gray-200 mt-0.5">{{ detail()!.session.leadName || '—' }}</p>
                 </div>
                 <div>

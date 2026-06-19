@@ -102,7 +102,7 @@ import { startWith } from 'rxjs';
 
               <!-- LeadName -->
               <ng-container matColumnDef="leadName">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome do Disparo</th>
+                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome no Disparo</th>
                 <td mat-cell *matCellDef="let lead" class="px-4 py-3">
                   <span class="text-sm text-gray-700 dark:text-gray-300">{{ lead.leadName || '—' }}</span>
                 </td>

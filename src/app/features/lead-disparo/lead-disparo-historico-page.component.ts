@@ -291,7 +291,7 @@ const ITEM_STATUS_CONFIG: Record<string, { label: string; css: string; icon: str
               <table mat-table [dataSource]="filteredItems()" class="w-full">
 
                 <ng-container matColumnDef="lead">
-                  <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Lead</th>
+                  <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome no Disparo</th>
                   <td mat-cell *matCellDef="let i" class="px-4 py-3">
                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ i.leadName || '—' }}</p>
                     <p class="text-xs text-gray-400 font-mono">{{ i.phoneNumber }}</p>
