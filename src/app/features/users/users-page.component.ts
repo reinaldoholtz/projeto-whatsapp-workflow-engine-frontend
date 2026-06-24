@@ -9,6 +9,7 @@ import { User, UserRole, CreateUserRequest, UpdateUserRequest } from '@shared/mo
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 
 const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
+  MASTER:   { label: 'Master', css: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
   ADMIN:    { label: 'Administrador', css: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' },
   CORRETOR: { label: 'Corretor',      css: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'         },
   OPERADOR: { label: 'Operador',      css: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300'         },

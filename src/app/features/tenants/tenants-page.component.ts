@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { NgClass, DatePipe } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
@@ -11,7 +11,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 @Component({
   selector: 'app-tenants-page',
   standalone: true,
-  imports: [NgClass, DatePipe, ReactiveFormsModule, MatTableModule, MatMenuModule, SkeletonComponent],
+  imports: [ DatePipe, ReactiveFormsModule, MatTableModule, MatMenuModule, SkeletonComponent],
   template: `
     <div class="space-y-5">
 
