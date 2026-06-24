@@ -14,22 +14,28 @@ export class AuthService {
   private http   = inject(HttpClient);
   private router = inject(Router);
 
-  // ── Signals ──────────────────────────────────────────────────────────────
   private _user    = signal<AuthUser | null>(this.loadUser());
   private _loading = signal(false);
 
   readonly user       = this._user.asReadonly();
   readonly loading    = this._loading.asReadonly();
   readonly isLoggedIn = computed(() => !!this._user());
-  readonly isAdmin    = computed(() => this._user()?.role === 'ADMIN');
+  readonly isAdmin    = computed(() => this._user()?.role === 'ADMIN' || this._user()?.role === 'MASTER');
+  readonly isMaster   = computed(() => this._user()?.role === 'MASTER');
+  readonly tenantId   = computed(() => this._user()?.tenantId ?? null);
+  readonly databaseName = computed(() => this._user()?.databaseName ?? null);
 
-  // ── Auth ──────────────────────────────────────────────────────────────────
   login(req: LoginRequest) {
     this._loading.set(true);
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, req).pipe(
       tap(res => {
         this.saveTokens(res);
-        this._user.set({ email: res.email, role: res.role as AuthUser['role'] });
+        this._user.set({
+          email:        res.email,
+          role:         res.role as AuthUser['role'],
+          tenantId:     res.tenantId ?? null,
+          databaseName: res.databaseName ?? null,
+        });
         this._loading.set(false);
       }),
       catchError(err => {
@@ -54,24 +60,13 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
-  /**
-   * Verifica se existe refresh token armazenado.
-   * Usado pelo interceptor para decidir se vale a pena tentar renovar
-   * a sessão antes de redirecionar para o login.
-   */
   hasRefreshToken(): boolean {
     return !!localStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
-  /**
-   * Logout forçado quando a sessão expira (401 sem possibilidade de refresh).
-   * Não dispara chamada HTTP de logout — a sessão já está inválida no servidor.
-   * Redireciona preservando a URL atual via queryParam returnUrl.
-   */
   forceLogoutToLogin(): void {
     const wasLoggedIn = this.isLoggedIn();
     this.clearSession();
-
     if (wasLoggedIn) {
       const returnUrl = this.router.routerState.snapshot.url;
       this.router.navigate(['/auth/login'], {
@@ -86,11 +81,15 @@ export class AuthService {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
   private saveTokens(res: AuthResponse) {
     localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken);
-    const user: AuthUser = { email: res.email, role: res.role as AuthUser['role'] };
+    const user: AuthUser = {
+      email:        res.email,
+      role:         res.role as AuthUser['role'],
+      tenantId:     res.tenantId ?? null,
+      databaseName: res.databaseName ?? null,
+    };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }
 

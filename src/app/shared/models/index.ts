@@ -2,24 +2,37 @@
 export interface LoginRequest { email: string; password: string; }
 
 export interface AuthResponse {
-  accessToken: string; refreshToken: string; tokenType: string;
-  expiresIn: number; email: string; role: string;
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number;
+  email: string;
+  role: string;
+  /** ID do tenant no admin_db — null para usuários legados */
+  tenantId?: number | null;
+  /** Nome do banco PostgreSQL do tenant */
+  databaseName?: string | null;
 }
 
 export interface AuthUser {
   email: string;
-  role: 'ADMIN' | 'CORRETOR' | 'OPERADOR';
+  role: 'MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR';
   name?: string;
+  /** ID do tenant no admin_db */
+  tenantId?: number | null;
+  /** Nome do banco PostgreSQL do tenant */
+  databaseName?: string | null;
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────
-export type UserRole = 'ADMIN' | 'CORRETOR' | 'OPERADOR';
+export type UserRole = 'MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR';
 
 export interface User {
   id: number;
+  tenantId: number | null;
   name: string;
-  phoneNumber: string;
-  whatsappPhone: string;
+  phoneNumber: string | null;
+  whatsappPhone: string | null;
   email: string;
   role: UserRole;
   active: boolean;
@@ -28,13 +41,38 @@ export interface User {
 }
 
 export interface CreateUserRequest {
-  name: string; phoneNumber?: string; whatsappPhone?: string;
-  email: string; password: string; role: UserRole;
+  name: string;
+  phoneNumber?: string;
+  whatsappPhone?: string;
+  email: string;
+  password: string;
+  role: UserRole;
 }
 
 export interface UpdateUserRequest {
-  name?: string; phoneNumber?: string; whatsappPhone?: string;
-  email?: string; password?: string; role?: UserRole; active?: boolean;
+  name?: string;
+  phoneNumber?: string;
+  whatsappPhone?: string;
+  email?: string;
+  password?: string;
+  role?: UserRole;
+  active?: boolean;
+}
+
+// ── Tenants (admin_db) ────────────────────────────────────────────────────
+export interface Tenant {
+  id: number;
+  name: string;
+  databaseName: string;
+  schemaVersion: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTenantRequest {
+  name: string;
+  databaseName: string;
 }
 
 // ── MetaPhone ─────────────────────────────────────────────────────────────
@@ -59,7 +97,8 @@ export interface UpdateMetaPhoneRequest {
 export type LeadStatus = 'ACTIVE' | 'HUMAN_HANDOFF' | 'COMPLETED' | 'LEAVE' | 'PAUSED';
 
 export interface LeadSession {
-  id: number; phoneNumber: string; profileName: string | null; leadName: string | null;
+  id: number; phoneNumber: string; profileName: string | null;
+  leadName: string | null;
   status: LeadStatus; currentStep: string | null; workflow: string | null;
   lastInteraction: string | null; createdAt: string;
 }
@@ -151,8 +190,7 @@ export interface DisparoStartRequest {
 
 export interface DisparoItemResponse {
   id: number; leadName: string; phoneNumber: string;
-  status: DisparoStatus; errorDetail: string | null;
-  processedAt: string;
+  status: DisparoStatus; errorDetail: string | null; processedAt: string;
 }
 
 export interface DisparoResultResponse {
@@ -163,35 +201,20 @@ export interface DisparoResultResponse {
 
 // ── Lead Batch (Histórico) ────────────────────────────────────────────────
 export interface LeadBatchSummary {
-  id: number;
-  fileName: string;
-  runId: string;
-  workflowId: number | null;
-  workflowName: string | null;
+  id: number; fileName: string; runId: string;
+  workflowId: number | null; workflowName: string | null;
   status: BatchStatus;
-  totalRecords: number;
-  processedRecords: number;
-  successRecords: number;
-  errorRecords: number;
-  batchSize: number;
-  intervalMinutes: number;
-  scheduledAt: string | null;
-  startedAt: string | null;
-  finishedAt: string | null;
-  createdAt: string;
-  progressPct: number;
+  totalRecords: number; processedRecords: number;
+  successRecords: number; errorRecords: number;
+  batchSize: number; intervalMinutes: number;
+  scheduledAt: string | null; startedAt: string | null; finishedAt: string | null;
+  createdAt: string; progressPct: number;
 }
 
 export interface DisparoItemSummary {
-  id: number;
-  leadName: string | null;
-  phoneNumber: string;
-  status: string;
-  errorDetail: string | null;
-  whatsappMessageId: string | null;
-  processedAt: string;
-  deliveredAt: string | null;
-  readAt: string | null;
+  id: number; leadName: string | null; phoneNumber: string;
+  status: string; errorDetail: string | null; whatsappMessageId: string | null;
+  processedAt: string; deliveredAt: string | null; readAt: string | null;
 }
 
 export interface LeadBatchDetail {
