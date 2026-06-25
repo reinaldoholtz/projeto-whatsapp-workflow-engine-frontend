@@ -3,9 +3,11 @@ import { NgClass, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
+import { AuthService } from '@core/auth/auth.service';
+import { TenantService } from '@core/services/tenant.service';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
-import { User, UserRole, CreateUserRequest, UpdateUserRequest } from '@shared/models';
+import { User, UserRole, CreateUserRequest, UpdateUserRequest, Tenant } from '@shared/models';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 
 const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
@@ -230,6 +232,23 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
               }
             </div>
 
+            @if (canChooseTenant()) {
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Tenant *
+                </label>
+                <select formControlName="tenantId" class="form-input">
+                  <option [ngValue]="null">Selecione um tenant</option>
+                  @for (tenant of activeTenants(); track tenant.id) {
+                    <option [ngValue]="tenant.id">{{ tenant.name }}</option>
+                  }
+                </select>
+                @if (form.get('tenantId')?.invalid && form.get('tenantId')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">Selecione o tenant do usuario</p>
+                }
+              </div>
+            }
+
             <!-- Phone -->
             <div>
               <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
@@ -384,13 +403,17 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
   `]
 })
 export class UsersPageComponent implements OnInit {
+  auth              = inject(AuthService);
+  private tenantService = inject(TenantService);
   private userService = inject(UserService);
   private toast       = inject(ToastService);
   private fb          = inject(FormBuilder);
 
   loading      = signal(true);
+  loadingTenants = signal(false);
   saving       = signal(false);
   users        = signal<User[]>([]);
+  tenants      = signal<Tenant[]>([]);
   showForm     = signal(false);
   editing      = signal<User | null>(null);
   userToDelete = signal<User | null>(null);
@@ -407,6 +430,7 @@ export class UsersPageComponent implements OnInit {
 
   form = this.fb.group({
     name:     ['', Validators.required],
+    tenantId: [null as number | null],
     phoneNumber: [''],
     whatsappPhone: ['', Validators.required],
     email:    ['', [Validators.required, Validators.email]],
@@ -423,13 +447,30 @@ export class UsersPageComponent implements OnInit {
     );
   });
 
-  ngOnInit() { this.load(); }
+  activeTenants = computed(() => this.tenants().filter(t => t.active));
+
+  ngOnInit() {
+    this.load();
+    this.loadTenants();
+  }
 
   load() {
     this.loading.set(true);
     this.userService.getAll().subscribe({
       next:  u => { this.users.set(u); this.loading.set(false); },
       error: () => this.loading.set(false),
+    });
+  }
+
+  loadTenants(): void {
+    if (!this.canChooseTenant()) return;
+    this.loadingTenants.set(true);
+    this.tenantService.getAll().subscribe({
+      next: tenants => {
+        this.tenants.set(tenants);
+        this.loadingTenants.set(false);
+      },
+      error: () => this.loadingTenants.set(false),
     });
   }
 
@@ -454,6 +495,10 @@ export class UsersPageComponent implements OnInit {
 
   isActiveForm(): boolean {
     return !!this.form.get('active')!.value;
+  }
+
+  canChooseTenant(): boolean {
+    return this.auth.isMasterAdminMode();
   }
 
   cancelDelete(): void {
@@ -495,6 +540,7 @@ export class UsersPageComponent implements OnInit {
     this.showPass.set(false);
     this.form.reset({
       name:     user?.name ?? '',
+      tenantId: user?.tenantId ?? null,
       email:    user?.email ?? '',
       phoneNumber: user?.phoneNumber ?? '',
       whatsappPhone: user?.whatsappPhone ?? '',
@@ -509,6 +555,15 @@ export class UsersPageComponent implements OnInit {
       pwCtrl.setValidators([Validators.minLength(6)]);
     }
     pwCtrl.updateValueAndValidity();
+
+    const tenantCtrl = this.form.get('tenantId')!;
+    if (this.canChooseTenant()) {
+      tenantCtrl.setValidators([Validators.required]);
+    } else {
+      tenantCtrl.clearValidators();
+    }
+    tenantCtrl.updateValueAndValidity();
+
     this.showForm.set(true);    
   }
 
@@ -525,6 +580,7 @@ export class UsersPageComponent implements OnInit {
     if (this.editing()) {
       const req: UpdateUserRequest = {
         name:   v.name   || undefined,
+        tenantId: this.canChooseTenant() ? v.tenantId ?? undefined : undefined,
         email:  v.email  || undefined,
         phoneNumber: v.phoneNumber || undefined,
         whatsappPhone: v.whatsappPhone || undefined,
@@ -548,6 +604,7 @@ export class UsersPageComponent implements OnInit {
     } else {
       const req: CreateUserRequest = {
         name:     v.name!,
+        tenantId: this.canChooseTenant() ? v.tenantId : undefined,
         email:    v.email!,
         phoneNumber: v.phoneNumber!,
         whatsappPhone: v.whatsappPhone!,
@@ -600,3 +657,4 @@ export class UsersPageComponent implements OnInit {
     });
   }
 }
+

@@ -20,22 +20,19 @@ export class AuthService {
   readonly user       = this._user.asReadonly();
   readonly loading    = this._loading.asReadonly();
   readonly isLoggedIn = computed(() => !!this._user());
-  readonly isAdmin    = computed(() => this._user()?.role === 'ADMIN' || this._user()?.role === 'MASTER');
   readonly isMaster   = computed(() => this._user()?.role === 'MASTER');
+  readonly isMasterAdminMode = computed(() => this.isMaster() && !!this._user()?.adminMode);
+  readonly isMasterTenantMode = computed(() => this.isMaster() && !this._user()?.adminMode);
+  readonly isAdmin    = computed(() => this._user()?.role === 'ADMIN' || this.isMaster());
   readonly tenantId   = computed(() => this._user()?.tenantId ?? null);
   readonly databaseName = computed(() => this._user()?.databaseName ?? null);
+  readonly tenantName = computed(() => this._user()?.tenantName ?? null);
 
   login(req: LoginRequest) {
     this._loading.set(true);
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, req).pipe(
       tap(res => {
-        this.saveTokens(res);
-        this._user.set({
-          email:        res.email,
-          role:         res.role as AuthUser['role'],
-          tenantId:     res.tenantId ?? null,
-          databaseName: res.databaseName ?? null,
-        });
+        this.applyAuthResponse(res);
         this._loading.set(false);
       }),
       catchError(err => {
@@ -49,7 +46,7 @@ export class AuthService {
     const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
     if (!refreshToken) return EMPTY;
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken }).pipe(
-      tap(res => this.saveTokens(res))
+      tap(res => this.applyAuthResponse(res))
     );
   }
 
@@ -81,6 +78,18 @@ export class AuthService {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
   }
 
+  applyAuthResponse(res: AuthResponse): void {
+    this.saveTokens(res);
+    this._user.set({
+      email:        res.email,
+      role:         res.role as AuthUser['role'],
+      tenantId:     res.tenantId ?? null,
+      databaseName: res.databaseName ?? null,
+      adminMode:    res.adminMode ?? null,
+      tenantName:   res.tenantName ?? null,
+    });
+  }
+
   private saveTokens(res: AuthResponse) {
     localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken);
@@ -89,6 +98,8 @@ export class AuthService {
       role:         res.role as AuthUser['role'],
       tenantId:     res.tenantId ?? null,
       databaseName: res.databaseName ?? null,
+      adminMode:    res.adminMode ?? null,
+      tenantName:   res.tenantName ?? null,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   }

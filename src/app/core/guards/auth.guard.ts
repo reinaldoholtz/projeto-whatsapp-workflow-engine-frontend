@@ -12,15 +12,22 @@ export const authGuard: CanActivateFn = () => {
 export const adminGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
-  if (auth.isAdmin()) return true;           // ADMIN ou MASTER
+  if (auth.isAdmin()) return true;
   return router.createUrlTree(['/dashboard']);
 };
 
 export const masterGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
-  if (auth.isMaster()) return true;          // apenas MASTER
+  if (auth.isMasterAdminMode()) return true;
   return router.createUrlTree(['/dashboard']);
+};
+
+export const tenantContextGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isMasterAdminMode()) return true;
+  return router.createUrlTree(['/tenants']);
 };
 
 export const guestGuard: CanActivateFn = () => {

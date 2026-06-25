@@ -3,6 +3,8 @@ import { DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
+import { Router } from '@angular/router';
+import { AuthService } from '@core/auth/auth.service';
 import { TenantService } from '@core/services/tenant.service';
 import { ToastService } from '@core/services/toast.service';
 import { Tenant, CreateTenantRequest } from '@shared/models';
@@ -150,6 +152,12 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
                   </button>
                   <mat-menu #menu="matMenu">
                     @if (t.active) {
+                      <button mat-menu-item (click)="enterTenant(t)">
+                        <span class="material-icons-round text-sky-500 text-base mr-2">login</span>
+                        Entrar
+                      </button>
+                    }
+                    @if (t.active) {
                       <button mat-menu-item (click)="deactivate(t)">
                         <span class="material-icons-round text-amber-500 text-base mr-2">block</span>
                         Desativar tenant
@@ -207,9 +215,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 
             <div>
               <label class="form-label">Nome do Tenant *</label>
-              <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2
-                             text-gray-400 text-base">domain</span>
+              <div class="relative">             
                 <input formControlName="name" placeholder="Ex: Imobiliária ABC"
                   class="form-input pl-9" />
               </div>
@@ -220,9 +226,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 
             <div>
               <label class="form-label">Nome do Database *</label>
-              <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2
-                             text-gray-400 text-base">storage</span>
+              <div class="relative">             
                 <input formControlName="databaseName"
                   placeholder="Ex: tenant_imobiliaria_abc"
                   class="form-input pl-9 font-mono text-sm" />
@@ -281,9 +285,11 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
   `]
 })
 export class TenantsPageComponent implements OnInit {
+  private auth          = inject(AuthService);
   private tenantService = inject(TenantService);
   private toast         = inject(ToastService);
   private fb            = inject(FormBuilder);
+  private router        = inject(Router);
 
   loading  = signal(true);
   saving   = signal(false);
@@ -347,6 +353,19 @@ export class TenantsPageComponent implements OnInit {
     this.tenantService.deactivate(t.id).subscribe({
       next:  () => { this.toast.success(`Tenant "${t.name}" desativado.`); this.load(); },
       error: () => this.toast.error('Erro ao desativar tenant.'),
+    });
+  }
+
+  enterTenant(t: Tenant) {
+    this.tenantService.enter(t.id).subscribe({
+      next: res => {
+        this.auth.applyAuthResponse(res);
+        this.toast.success(`Entrando no tenant "${t.name}"...`);
+        this.router.navigate(['/dashboard']);
+      },
+      error: (e: any) => {
+        this.toast.error(e?.error?.message ?? 'Erro ao entrar no tenant.');
+      },
     });
   }
 }

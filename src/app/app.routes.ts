@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, adminGuard, masterGuard } from '@core/guards/auth.guard';
+import { authGuard, guestGuard, adminGuard, masterGuard, tenantContextGuard } from '@core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -22,17 +22,17 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 
-      // ── Dashboard ───────────────────────────────────────────────────────
       {
         path: 'dashboard',
+        canActivate: [tenantContextGuard],
         loadComponent: () =>
           import('./features/dashboard/dashboard-page.component').then(m => m.DashboardPageComponent),
         title: 'Dashboard — CRM WhatsApp',
       },
 
-      // ── Leads ───────────────────────────────────────────────────────────
       {
         path: 'leads',
+        canActivate: [tenantContextGuard],
         children: [
           {
             path: '',
@@ -44,89 +44,84 @@ export const routes: Routes = [
             path: ':id',
             loadComponent: () =>
               import('./features/leads/lead-details/lead-details-page.component').then(m => m.LeadDetailsPageComponent),
-            title: 'Detalhes do Lead — CRM WhatsApp',
+            title: 'Detalhes do Lead - CRM WhatsApp',
           },
         ],
       },
 
-      // ── Lead Disparo ─────────────────────────────────────────────────────
       {
         path: 'lead-disparo',
+        canActivate: [tenantContextGuard],
         children: [
           {
             path: '',
             loadComponent: () =>
               import('./features/lead-disparo/lead-disparo-page.component').then(m => m.LeadDisparoPageComponent),
-            title: 'Disparar Leads — CRM WhatsApp',
+            title: 'Disparar Leads - CRM WhatsApp',
           },
           {
             path: 'historico',
             loadComponent: () =>
               import('./features/lead-disparo/lead-disparo-historico-page.component').then(m => m.LeadDisparoHistoricoPageComponent),
-            title: 'Histórico de Disparos — CRM WhatsApp',
+            title: 'HistÃ³rico de Disparos â€” CRM WhatsApp',
           },
         ],
       },
 
-      // ── Workflows (ADMIN + MASTER) ────────────────────────────────────────
       {
         path: 'workflows',
-        canActivate: [adminGuard],
+        canActivate: [adminGuard, tenantContextGuard],
         children: [
           {
             path: '',
             loadComponent: () =>
               import('./features/workflows/workflow-list/workflow-list-page.component').then(m => m.WorkflowListPageComponent),
-            title: 'Workflows — CRM WhatsApp',
+            title: 'Workflows - CRM WhatsApp',
           },
           {
             path: ':workflowId/steps',
             loadComponent: () =>
               import('./features/workflows/workflow-steps/workflow-steps-page.component').then(m => m.WorkflowStepsPageComponent),
-            title: 'Etapas — CRM WhatsApp',
+            title: 'Etapas - CRM WhatsApp',
           },
           {
             path: ':workflowId/documents',
             loadComponent: () =>
               import('./features/workflows/workflow-documents/workflow-documents-page.component').then(m => m.WorkflowDocumentsPageComponent),
-            title: 'Documentos — CRM WhatsApp',
+            title: 'Documentos - CRM WhatsApp',
           },
         ],
       },
 
-      // ── Canais WhatsApp (ADMIN + MASTER) ────────────────────────────────
       {
         path: 'meta-phones',
-        canActivate: [adminGuard],
+        canActivate: [adminGuard, tenantContextGuard],
         loadComponent: () =>
           import('./features/meta-phones/meta-phones-page.component').then(m => m.MetaPhonesPageComponent),
-        title: 'Canais WhatsApp — CRM WhatsApp',
+        title: 'Canais WhatsApp - CRM WhatsApp',
       },
 
-      // ── Usuários (ADMIN + MASTER) ────────────────────────────────────────
       {
         path: 'users',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/users/users-page.component').then(m => m.UsersPageComponent),
-        title: 'Usuários — CRM WhatsApp',
+        title: 'Usuários - CRM WhatsApp',
       },
 
-      // ── Tenants (MASTER only) — Fase 5 ──────────────────────────────────
       {
         path: 'tenants',
         canActivate: [masterGuard],
         loadComponent: () =>
           import('./features/tenants/tenants-page.component').then(m => m.TenantsPageComponent),
-        title: 'Tenants — CRM WhatsApp',
+        title: 'Tenants - CRM WhatsApp',
       },
 
-      // ── Configurações ────────────────────────────────────────────────────
       {
         path: 'settings',
         loadComponent: () =>
           import('./features/settings/settings-page.component').then(m => m.SettingsPageComponent),
-        title: 'Configurações — CRM WhatsApp',
+        title: 'Configurações - CRM WhatsApp',
       },
     ],
   },

@@ -12,6 +12,8 @@ export interface AuthResponse {
   tenantId?: number | null;
   /** Nome do banco PostgreSQL do tenant */
   databaseName?: string | null;
+  adminMode?: boolean | null;
+  tenantName?: string | null;
 }
 
 export interface AuthUser {
@@ -22,6 +24,8 @@ export interface AuthUser {
   tenantId?: number | null;
   /** Nome do banco PostgreSQL do tenant */
   databaseName?: string | null;
+  adminMode?: boolean | null;
+  tenantName?: string | null;
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────
@@ -42,6 +46,7 @@ export interface User {
 
 export interface CreateUserRequest {
   name: string;
+  tenantId?: number | null;
   phoneNumber?: string;
   whatsappPhone?: string;
   email: string;
@@ -51,6 +56,7 @@ export interface CreateUserRequest {
 
 export interface UpdateUserRequest {
   name?: string;
+  tenantId?: number | null;
   phoneNumber?: string;
   whatsappPhone?: string;
   email?: string;
@@ -238,3 +244,6 @@ export interface Page<T> {
 // ── Toast ─────────────────────────────────────────────────────────────────
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast { id: string; type: ToastType; message: string; duration?: number; }
+
+
+
