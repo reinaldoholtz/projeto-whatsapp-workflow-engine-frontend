@@ -50,7 +50,7 @@ interface NavItem {
           }
           @if (auth.isMaster()) {
             <p class="text-slate-400 text-xs mt-1 truncate">
-              {{ auth.isMasterAdminMode() ? 'Ambiente administrativo global' : (auth.tenantName() ?? auth.databaseName()) }}
+              {{ auth.isMasterAdminMode() ? 'Ambiente administrativo' : (auth.tenantName() ?? auth.databaseName()) }}
             </p>
           }
         </div>
