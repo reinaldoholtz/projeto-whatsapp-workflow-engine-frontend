@@ -359,6 +359,7 @@ export class TenantsPageComponent implements OnInit {
   enterTenant(t: Tenant) {
     this.tenantService.enter(t.id).subscribe({
       next: res => {
+        console.log('AuthResponse ao entrar no tenant:', res);
         this.auth.applyAuthResponse(res);
         this.toast.success(`Entrando no tenant "${t.name}"...`);
         this.router.navigate(['/dashboard']);

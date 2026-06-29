@@ -117,4 +117,20 @@ export class AuthService {
       return raw ? JSON.parse(raw) : null;
     } catch { return null; }
   }
+
+  readonly menuRole = computed<'MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR'>(() => {
+
+    const user = this._user();
+
+    if (!user) {
+      return 'OPERADOR';
+    }
+
+    // Master dentro do tenant age como ADMIN
+    if (user.role === 'MASTER' && !user.adminMode) {
+      return 'ADMIN';
+    }
+
+    return user.role;
+  });
 }

@@ -1,12 +1,15 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-import { NgClass } from '@angular/common';
+import { NgClass, DatePipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatMenuModule } from '@angular/material/menu';
 import { MetaPhoneService } from '@core/services/meta-phone.service';
+import { TenantService } from '@core/services/tenant.service';
 import { ToastService } from '@core/services/toast.service';
-import { MetaPhone, CreateMetaPhoneRequest, UpdateMetaPhoneRequest } from '@shared/models';
+import { AuthService } from '@core/auth/auth.service';
+import { MetaPhone, CreateMetaPhoneRequest, UpdateMetaPhoneRequest, Tenant } from '@shared/models';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-meta-phones-page',
@@ -19,13 +22,35 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
       <div class="page-header">
         <div>
           <h1>Canais WhatsApp</h1>
-          <p>Gerencie os números Meta Cloud API conectados ao sistema</p>
+          @if (auth.isMaster()) {
+            <p>Administração global de números Meta — {{ phones().length }} número(s) cadastrado(s)</p>
+          } @else {
+            <p>Números WhatsApp disponíveis para este tenant</p>
+          }
         </div>
-        <button (click)="openForm()" class="btn-primary">
-          <span class="material-icons-round text-base">add</span>
-          Novo Número
-        </button>
+        <!-- Apenas MASTER pode criar -->
+        @if (auth.isMaster()) {
+          <button (click)="openForm()" class="btn-primary">
+            <span class="material-icons-round text-base">add</span>
+            Novo Número
+          </button>
+        }
       </div>
+
+      <!-- Aviso ADMIN somente leitura -->
+      @if (!auth.isMaster()) {
+        <div class="card p-4 flex items-start gap-3 bg-blue-50 dark:bg-blue-900/10
+                    border-blue-200 dark:border-blue-800">
+          <span class="material-icons-round text-blue-500 flex-shrink-0 mt-0.5">info</span>
+          <div class="text-sm text-blue-700 dark:text-blue-300">
+            <p class="font-semibold">Visualização apenas</p>
+            <p class="text-xs mt-0.5">
+              A criação, edição e exclusão de números WhatsApp é realizada
+              exclusivamente pelo administrador MASTER da plataforma.
+            </p>
+          </div>
+        </div>
+      }
 
       <!-- Table -->
       <div class="card overflow-hidden">
@@ -35,14 +60,16 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
           <div class="overflow-x-auto">
             <table mat-table [dataSource]="phones()" class="w-full">
 
-              <!-- Name -->
-              <ng-container matColumnDef="name">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Número
+              <!-- Número -->
+              <ng-container matColumnDef="phone">
+                <th mat-header-cell *matHeaderCellDef
+                  class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Número WhatsApp
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30
+                                flex items-center justify-center flex-shrink-0">
                       <span class="material-icons-round text-emerald-600 text-xl">perm_phone_msg</span>
                     </div>
                     <div>
@@ -55,23 +82,39 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 
               <!-- Phone Number ID -->
               <ng-container matColumnDef="phoneNumberId">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th mat-header-cell *matHeaderCellDef
+                  class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Phone Number ID
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
-                  <span class="font-mono text-xs bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded text-gray-600 dark:text-gray-300">
+                  <span class="font-mono text-xs bg-gray-100 dark:bg-slate-700
+                               text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
                     {{ p.phoneNumberId }}
                   </span>
                 </td>
               </ng-container>
 
+              <!-- Tenant (apenas MASTER vê) -->
+              @if (auth.isMaster()) {
+                <ng-container matColumnDef="tenant">
+                  <th mat-header-cell *matHeaderCellDef
+                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Tenant
+                  </th>
+                  <td mat-cell *matCellDef="let p" class="px-4 py-3">
+                    <span class="text-sm text-gray-600 dark:text-gray-300">{{ p.tenantName || '—' }}</span>
+                  </td>
+                </ng-container>
+              }
+
               <!-- Token -->
               <ng-container matColumnDef="token">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th mat-header-cell *matHeaderCellDef
+                  class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Token
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
-                  @if (p.accessToken) {
+                  @if (p.hasToken) {
                     <span class="badge badge-active">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Configurado
                     </span>
@@ -83,57 +126,64 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 
               <!-- Status -->
               <ng-container matColumnDef="active">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                <th mat-header-cell *matHeaderCellDef
+                  class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
                   @if (p.active) {
-                    <span class="badge badge-active"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ativo</span>
+                    <span class="badge badge-active">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Ativo
+                    </span>
                   } @else {
-                    <span class="badge badge-leave"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inativo</span>
+                    <span class="badge badge-leave">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Inativo
+                    </span>
                   }
                 </td>
               </ng-container>
 
-              <!-- Actions -->
+              <!-- Actions — apenas MASTER -->
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef class="px-4 py-3 w-20"></th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
-                  <div class="flex items-center gap-1">
-                    <button (click)="openForm(p)"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
-                             hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors"
-                      title="Editar">
-                      <span class="material-icons-round text-base">edit</span>
-                    </button>
-                    <button [matMenuTriggerFor]="menu"
-                      class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
-                             hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                      <span class="material-icons-round text-base">more_vert</span>
-                    </button>
-                    <mat-menu #menu="matMenu">
-                      <button mat-menu-item (click)="toggleActive(p)">
-                        <span class="material-icons-round text-base mr-2"
-                          [ngClass]="p.active ? 'text-amber-500' : 'text-emerald-500'">
-                          {{ p.active ? 'block' : 'check_circle' }}
-                        </span>
-                        {{ p.active ? 'Desativar' : 'Ativar' }}
+                  @if (auth.isMaster()) {
+                    <div class="flex items-center gap-1">
+                      <button (click)="openForm(p)"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                               hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600
+                               transition-colors" title="Editar">
+                        <span class="material-icons-round text-base">edit</span>
                       </button>
-                      <button mat-menu-item (click)="confirmDelete(p)">
-                        <span class="material-icons-round text-red-500 text-base mr-2">delete</span>
-                        Excluir
+                      <button [matMenuTriggerFor]="menu"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                               hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                        <span class="material-icons-round text-base">more_vert</span>
                       </button>
-                    </mat-menu>
-                  </div>
+                      <mat-menu #menu="matMenu">
+                        <button mat-menu-item (click)="toggleActive(p)">
+                          <span class="material-icons-round text-base mr-2"
+                            [ngClass]="p.active ? 'text-amber-500' : 'text-emerald-500'">
+                            {{ p.active ? 'block' : 'check_circle' }}
+                          </span>
+                          {{ p.active ? 'Desativar' : 'Ativar' }}
+                        </button>
+                        <button mat-menu-item (click)="confirmDelete(p)">
+                          <span class="material-icons-round text-red-500 text-base mr-2">delete</span>
+                          Excluir
+                        </button>
+                      </mat-menu>
+                    </div>
+                  }
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="columns"></tr>
-              <tr mat-row *matRowDef="let row; columns: columns;"
+              <tr mat-header-row *matHeaderRowDef="visibleColumns()"></tr>
+              <tr mat-row *matRowDef="let row; columns: visibleColumns();"
                 class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition-colors"></tr>
 
               <tr *matNoDataRow>
-                <td [colSpan]="columns.length" class="py-16 text-center text-gray-400">
+                <td [colSpan]="visibleColumns().length" class="py-16 text-center text-gray-400">
                   <span class="material-icons-round text-5xl block mb-2 opacity-30">phone_iphone</span>
                   Nenhum número configurado
                 </td>
@@ -144,74 +194,121 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
       </div>
     </div>
 
-    <!-- ── Form Dialog ──────────────────────────────────────────────────────── -->
-    @if (showForm()) {
+    <!-- ── Form Dialog — apenas MASTER ─────────────────────────────────────── -->
+    @if (showForm() && auth.isMaster()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in overflow-y-auto">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-4 animate-slide-in">
 
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+              <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30
+                          flex items-center justify-center">
                 <span class="material-icons-round text-emerald-600 text-xl">perm_phone_msg</span>
               </div>
               <div>
                 <h2 class="text-base font-semibold text-gray-900 dark:text-white">
                   {{ editing() ? 'Editar Número' : 'Novo Número WhatsApp' }}
                 </h2>
-                <p class="text-xs text-gray-400">Meta Cloud API</p>
+                <p class="text-xs text-gray-400">Meta Cloud API — admin_db</p>
               </div>
             </div>
             <button (click)="closeForm()"
-              class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700">
+              class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
+                     hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
               <span class="material-icons-round">close</span>
             </button>
           </div>
 
           <form [formGroup]="form" (ngSubmit)="save()" class="p-6 space-y-4">
 
+            <!-- Tenant (obrigatório para MASTER ao criar) -->
+            @if (!editing()) {
+              <div>
+                <label class="form-label">Tenant *</label>
+                <div class="relative">
+                  <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2
+                               text-gray-400 text-base">domain</span>
+                  <select formControlName="tenantId" class="form-input pl-9">
+                    <option [ngValue]="null">— Selecione o tenant —</option>
+                    @for (t of tenants(); track t.id) {
+                      <option [ngValue]="t.id">{{ t.name }}</option>
+                    }
+                  </select>
+                </div>
+                @if (form.get('tenantId')?.invalid && form.get('tenantId')?.touched) {
+                  <p class="text-red-500 text-xs mt-1">Tenant é obrigatório</p>
+                }
+              </div>
+            } @else {
+              <!-- Em edição mostra o tenant atual (read only) -->
+              <div class="flex items-center gap-2 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl">
+                <span class="material-icons-round text-gray-400 text-base">domain</span>
+                <span class="text-sm text-gray-600 dark:text-gray-300">
+                  Tenant: <strong>{{ editing()!.tenantName }}</strong>
+                </span>
+              </div>
+            }
+
+            <!-- Nome amigável -->
             <div>
               <label class="form-label">Nome amigável *</label>
-              <input formControlName="name" placeholder="Ex: Vendas, Aluguel, Financiamento" class="form-input" />
+              <input formControlName="name" placeholder="Ex: Vendas, Aluguel, Financiamento"
+                class="form-input" />
               @if (form.get('name')?.invalid && form.get('name')?.touched) {
                 <p class="text-red-500 text-xs mt-1">Nome é obrigatório</p>
               }
             </div>
 
+            <!-- Número de exibição -->
             <div>
               <label class="form-label">Número de exibição *</label>
-              <input formControlName="displayPhoneNumber" placeholder="Ex: +55 41 99999-0000" class="form-input" />
+              <input formControlName="displayPhoneNumber" placeholder="Ex: +55 41 99999-0000"
+                class="form-input" />
               @if (form.get('displayPhoneNumber')?.invalid && form.get('displayPhoneNumber')?.touched) {
                 <p class="text-red-500 text-xs mt-1">Número de exibição é obrigatório</p>
               }
             </div>
 
+            <!-- Phone Number ID -->
             <div>
               <label class="form-label">Phone Number ID (Meta) *</label>
-              <input formControlName="phoneNumberId" placeholder="Ex: 123456789012345" class="form-input font-mono text-sm" />
-              <p class="text-xs text-gray-400 mt-1">Disponível no painel Meta for Developers → WhatsApp → API Setup</p>
+              <input formControlName="phoneNumberId" placeholder="Ex: 123456789012345"
+                class="form-input font-mono text-sm" />
+              <p class="text-xs text-gray-400 mt-1">
+                Disponível em Meta for Developers → WhatsApp → API Setup
+              </p>
               @if (form.get('phoneNumberId')?.invalid && form.get('phoneNumberId')?.touched) {
                 <p class="text-red-500 text-xs mt-1">Phone Number ID é obrigatório</p>
               }
             </div>
 
-            <!-- <div>
-              <label class="form-label">Business Account ID (WABA)</label>
-              <input formControlName="businessAccountId" placeholder="Opcional" class="form-input font-mono text-sm" />
-            </div> -->
-
+            <!-- Business Account ID -->
             <div>
-              <label class="form-label">Access Token específico</label>
+              <label class="form-label">Business Account ID (WABA)</label>
+              <input formControlName="businessAccountId" placeholder="Opcional"
+                class="form-input font-mono text-sm" />
+            </div>
+
+            <!-- Access Token -->
+            <div>
+              <label class="form-label">
+                Access Token
+                @if (editing()) { <span class="text-gray-400 font-normal">(deixe em branco para manter)</span> }
+              </label>
               <textarea formControlName="accessToken" rows="2"
-                placeholder="Deixe em branco para usar o token global do servidor"
-                class="form-input resize-none text-xs font-mono"></textarea>
+                 placeholder="Token de Acesso do Meta Cloud API"
+                 class="form-input resize-none text-xs font-mono"></textarea>
               <p class="text-xs text-gray-400 mt-1">
-                Se preenchido, este token será usado exclusivamente para este número.
+                Gerenciado exclusivamente pelo MASTER. Nunca exposto ao ADMIN.
               </p>
             </div>
 
             <div class="flex gap-3 pt-2 border-t border-gray-100 dark:border-slate-700">
-              <button type="button" (click)="closeForm()" class="btn-secondary flex-1 justify-center">Cancelar</button>
-              <button type="submit" [disabled]="form.invalid || saving()" class="btn-primary flex-1 justify-center">
+              <button type="button" (click)="closeForm()" class="btn-secondary flex-1 justify-center">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="form.invalid || saving()"
+                class="btn-primary flex-1 justify-center">
                 @if (saving()) {
                   <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                 } @else {
@@ -225,7 +322,7 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
       </div>
     }
 
-    <!-- ── Confirm Delete ───────────────────────────────────────────────────── -->
+    <!-- ── Confirm Delete ────────────────────────────────────────────────────── -->
     @if (phoneToDelete()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-slide-in text-center">
@@ -233,15 +330,21 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
             <span class="material-icons-round text-red-600 text-2xl">delete_forever</span>
           </div>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Excluir número?</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            Excluir <strong class="text-gray-800 dark:text-gray-200">{{ phoneToDelete()!.name }}</strong>
-            ({{ phoneToDelete()!.displayPhoneNumber }})?
-            Workflows associados ficarão sem número.
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            <strong class="text-gray-800 dark:text-gray-200">{{ phoneToDelete()!.name }}</strong>
+            ({{ phoneToDelete()!.displayPhoneNumber }})
+          </p>
+          <p class="text-xs text-amber-600 dark:text-amber-400 mb-6">
+            Workflows associados ficarão sem número WhatsApp.
           </p>
           <div class="flex gap-3">
-            <button (click)="phoneToDelete.set(null)" class="btn-secondary flex-1 justify-center">Cancelar</button>
+            <button (click)="phoneToDelete.set(null)" class="btn-secondary flex-1 justify-center">
+              Cancelar
+            </button>
             <button (click)="deletePhone()" [disabled]="saving()" class="btn-danger flex-1 justify-center">
-              @if (saving()) { <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> }
+              @if (saving()) {
+                <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              }
               Excluir
             </button>
           </div>
@@ -260,19 +363,29 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
 })
 export class MetaPhonesPageComponent implements OnInit {
   private metaPhoneService = inject(MetaPhoneService);
+  private tenantService    = inject(TenantService);
   private toast            = inject(ToastService);
+  auth                     = inject(AuthService);
   private fb               = inject(FormBuilder);
 
   loading       = signal(true);
   saving        = signal(false);
   phones        = signal<MetaPhone[]>([]);
+  tenants       = signal<Tenant[]>([]);
   showForm      = signal(false);
   editing       = signal<MetaPhone | null>(null);
   phoneToDelete = signal<MetaPhone | null>(null);
 
-  columns = ['name', 'phoneNumberId', 'token', 'active', 'actions'];
+  /** Colunas visíveis — MASTER vê tenant, ADMIN não */
+  visibleColumns = computed(() => {
+    const base = ['phone', 'phoneNumberId', 'token', 'active', 'actions'];
+    return this.auth.isMaster()
+      ? ['phone', 'phoneNumberId', 'tenant', 'token', 'active', 'actions']
+      : base;
+  });
 
   form = this.fb.group({
+    tenantId:           [null as number | null],
     name:               ['', Validators.required],
     displayPhoneNumber: ['', Validators.required],
     phoneNumberId:      ['', Validators.required],
@@ -284,21 +397,47 @@ export class MetaPhonesPageComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.metaPhoneService.getAll().subscribe({
-      next:  p => { this.phones.set(p); this.loading.set(false); },
-      error: () => this.loading.set(false),
-    });
+
+    const phones$ = this.metaPhoneService.getAll();
+
+    if (this.auth.isMaster()) {
+      // MASTER precisa da lista de tenants para o select do formulário
+      forkJoin({ phones: phones$, tenants: this.tenantService.getAll() }).subscribe({
+        next: ({ phones, tenants }) => {
+          this.phones.set(phones);
+          this.tenants.set(tenants.filter(t => t.active));
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    } else {
+      phones$.subscribe({
+        next:  p => { this.phones.set(p); this.loading.set(false); },
+        error: () => this.loading.set(false),
+      });
+    }
   }
 
   openForm(phone?: MetaPhone) {
     this.editing.set(phone ?? null);
     this.form.reset({
-      name:               phone?.name ?? '',
+      tenantId:           phone?.tenantId  ?? null,
+      name:               phone?.name      ?? '',
       displayPhoneNumber: phone?.displayPhoneNumber ?? '',
       phoneNumberId:      phone?.phoneNumberId ?? '',
       businessAccountId:  phone?.businessAccountId ?? '',
-      accessToken:        phone?.accessToken ?? '',
+      accessToken:        '',  // nunca pre-preenche — token não é retornado pelo backend
     });
+
+    // tenantId obrigatório apenas ao criar
+    const tidCtrl = this.form.get('tenantId')!;
+    if (!phone) {
+      tidCtrl.setValidators(Validators.required);
+    } else {
+      tidCtrl.clearValidators();
+    }
+    tidCtrl.updateValueAndValidity();
+
     this.showForm.set(true);
   }
 
@@ -323,6 +462,7 @@ export class MetaPhonesPageComponent implements OnInit {
       });
     } else {
       const req: CreateMetaPhoneRequest = {
+        tenantId:           v.tenantId            ?? undefined,
         name:               v.name!,
         displayPhoneNumber: v.displayPhoneNumber!,
         phoneNumberId:      v.phoneNumberId!,
@@ -330,7 +470,7 @@ export class MetaPhonesPageComponent implements OnInit {
         accessToken:        v.accessToken          || undefined,
       };
       this.metaPhoneService.create(req).subscribe({
-        next: () => { this.toast.success('Número criado com sucesso!'); this.closeForm(); this.saving.set(false); this.load(); },
+        next: () => { this.toast.success('Número criado!'); this.closeForm(); this.saving.set(false); this.load(); },
         error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao criar.'); this.saving.set(false); },
       });
     }
@@ -338,8 +478,8 @@ export class MetaPhonesPageComponent implements OnInit {
 
   toggleActive(phone: MetaPhone) {
     this.metaPhoneService.toggleActive(phone.id).subscribe({
-      next: p => { this.toast.success(`Número ${p.active ? 'ativado' : 'desativado'}!`); this.load(); },
-      error: () => this.toast.error('Erro ao alterar status.'),
+      next: p => { this.toast.success(`${p.active ? 'Ativado' : 'Desativado'}!`); this.load(); },
+      error: (e: any) => this.toast.error(e?.error?.message ?? 'Erro ao alterar status.'),
     });
   }
 
@@ -349,8 +489,16 @@ export class MetaPhonesPageComponent implements OnInit {
     if (!this.phoneToDelete()) return;
     this.saving.set(true);
     this.metaPhoneService.delete(this.phoneToDelete()!.id).subscribe({
-      next: () => { this.toast.success('Número excluído!'); this.phoneToDelete.set(null); this.saving.set(false); this.load(); },
-      error: () => { this.toast.error('Erro ao excluir.'); this.saving.set(false); },
+      next: () => {
+        this.toast.success('Número excluído!');
+        this.phoneToDelete.set(null);
+        this.saving.set(false);
+        this.load();
+      },
+      error: (e: any) => {
+        this.toast.error(e?.error?.message ?? 'Erro ao excluir.');
+        this.saving.set(false);
+      },
     });
   }
 }

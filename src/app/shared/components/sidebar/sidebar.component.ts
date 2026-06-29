@@ -4,14 +4,13 @@ import { NgClass } from '@angular/common';
 import { AuthService } from '@core/auth/auth.service';
 import { TenantService } from '@core/services/tenant.service';
 
+
 interface NavItem {
+  id: string;
   label: string;
   icon: string;
   route: string;
-  adminOnly?: boolean;
-  masterOnly?: boolean;
-  masterAdminOnly?: boolean;
-  tenantAreaOnly?: boolean;
+  roles?: ('MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR')[];
   dividerBefore?: boolean;
   subLabel?: string;
 }
@@ -71,7 +70,7 @@ interface NavItem {
           </button>
         }
 
-        @for (item of navItems; track item.route) {
+        @for (item of navItems; track item.id) {
           @if (isVisible(item)) {
             @if (item.dividerBefore) {
               <div class="my-2 border-t border-slate-700/50"></div>
@@ -118,25 +117,35 @@ export class SidebarComponent {
   private tenantService = inject(TenantService);
   private router = inject(Router);
 
-  navItems: NavItem[] = [
-    { label: 'Dashboard',          icon: 'dashboard',          route: '/dashboard',              tenantAreaOnly: true },
-    { label: 'Leads',              icon: 'people',             route: '/leads',                  tenantAreaOnly: true },
-    { label: 'Disparar Leads',     icon: 'send',               route: '/lead-disparo',           tenantAreaOnly: true, dividerBefore: true },
-    { label: 'Historico Disparos', icon: 'history',            route: '/lead-disparo/historico', tenantAreaOnly: true, subLabel: 'Arquivos e resultados' },
-    { label: 'Workflows',          icon: 'account_tree',       route: '/workflows',              adminOnly: true, tenantAreaOnly: true, dividerBefore: true },
-    { label: 'Canais WhatsApp',    icon: 'perm_phone_msg',     route: '/meta-phones',            adminOnly: true, tenantAreaOnly: true },
-    { label: 'Usuarios',           icon: 'manage_accounts',    route: '/users',                  adminOnly: true, tenantAreaOnly: true },
-    { label: 'Tenants',            icon: 'domain',             route: '/tenants',                masterAdminOnly: true, dividerBefore: true, subLabel: 'Gestao global' },
-    { label: 'Usuarios Globais',   icon: 'supervisor_account', route: '/users',                  masterAdminOnly: true },
-    { label: 'Configuracoes',      icon: 'settings',           route: '/settings',               dividerBefore: true },
-  ];
+ navItems: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+
+  { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+
+  { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
+
+  { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
+
+  { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
+
+  { id: 'meta-phones', label: 'Canais WhatsApp', icon: 'perm_phone_msg', route: '/meta-phones', roles: ['MASTER', 'ADMIN'] },
+
+  { id: 'users', label: 'Usuarios', icon: 'manage_accounts', route: '/users', roles: ['ADMIN'] },
+
+  { id: 'tenants', label: 'Tenants', icon: 'domain', route: '/tenants', roles: ['MASTER'], dividerBefore: true, subLabel: 'Gestao global' },
+
+  { id: 'global-users', label: 'Usuarios Globais', icon: 'supervisor_account', route: '/users', roles: ['MASTER'] },
+
+  { id: 'settings', label: 'Configuracoes', icon: 'settings', route: '/settings' }
+];
 
   isVisible(item: NavItem): boolean {
-    if (item.masterAdminOnly) return this.auth.isMasterAdminMode();
-    if (item.masterOnly) return this.auth.isMaster();
-    if (item.tenantAreaOnly && this.auth.isMasterAdminMode()) return false;
-    if (item.adminOnly) return this.auth.isAdmin();
-    return true;
+
+    if (!item.roles?.length) {
+      return true;
+    }
+
+    return item.roles.includes(this.auth.menuRole());
   }
 
   returnToAdmin(): void {

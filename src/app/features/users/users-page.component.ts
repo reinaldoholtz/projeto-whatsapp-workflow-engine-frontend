@@ -79,6 +79,20 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
                 </td>
               </ng-container>
 
+              <!-- Tenant -->
+              <ng-container matColumnDef="tenantName">
+                <th mat-header-cell *matHeaderCellDef
+                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  Tenant
+                </th>
+
+                <td mat-cell *matCellDef="let user" class="px-4 py-3">
+                  <span class="text-sm text-gray-900 dark:text-white">
+                    {{ user.tenantName }}
+                  </span>
+                </td>
+              </ng-container>
+
               <!-- Role -->
               <ng-container matColumnDef="role">
                 <th mat-header-cell *matHeaderCellDef
@@ -162,13 +176,18 @@ const ROLE_CONFIG: Record<UserRole, { label: string; css: string }> = {
                 </td>
               </ng-container>
 
-              <tr mat-header-row *matHeaderRowDef="columns"></tr>
-              <tr mat-row *matRowDef="let row; columns: columns;"
-                class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/40"></tr>
+              <tr mat-header-row *matHeaderRowDef="columns()"></tr>
+              <tr mat-row
+                  *matRowDef="let row; columns: columns();"
+                  class="transition-colors hover:bg-gray-50 dark:hover:bg-slate-700/40">
+              </tr>
 
               <tr *matNoDataRow>
-                <td [colSpan]="columns.length" class="py-16 text-center text-gray-400">
-                  <span class="material-icons-round text-5xl block mb-2 opacity-30">manage_accounts</span>
+                <td [colSpan]="columns().length"
+                    class="py-16 text-center text-gray-400">
+                  <span class="material-icons-round text-5xl block mb-2 opacity-30">
+                    manage_accounts
+                  </span>
                   Nenhum usuário encontrado
                 </td>
               </tr>
@@ -426,7 +445,11 @@ export class UsersPageComponent implements OnInit {
     { value: 'OPERADOR', label: 'Operador',      icon: 'support_agent'        },
   ];
 
-  columns = ['name', 'role', 'active', 'createdAt', 'actions'];
+  columns = computed(() =>
+    this.auth.isMasterAdminMode()
+      ? ['name', 'tenantName', 'role', 'active', 'createdAt', 'actions']
+      : ['name', 'role', 'active', 'createdAt', 'actions']
+  );
 
   form = this.fb.group({
     name:     ['', Validators.required],

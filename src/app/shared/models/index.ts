@@ -8,9 +8,7 @@ export interface AuthResponse {
   expiresIn: number;
   email: string;
   role: string;
-  /** ID do tenant no admin_db — null para usuários legados */
   tenantId?: number | null;
-  /** Nome do banco PostgreSQL do tenant */
   databaseName?: string | null;
   adminMode?: boolean | null;
   tenantName?: string | null;
@@ -20,9 +18,7 @@ export interface AuthUser {
   email: string;
   role: 'MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR';
   name?: string;
-  /** ID do tenant no admin_db */
   tenantId?: number | null;
-  /** Nome do banco PostgreSQL do tenant */
   databaseName?: string | null;
   adminMode?: boolean | null;
   tenantName?: string | null;
@@ -34,6 +30,7 @@ export type UserRole = 'MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR';
 export interface User {
   id: number;
   tenantId: number | null;
+  tenantName: string | null;
   name: string;
   phoneNumber: string | null;
   whatsappPhone: string | null;
@@ -82,21 +79,45 @@ export interface CreateTenantRequest {
 }
 
 // ── MetaPhone ─────────────────────────────────────────────────────────────
+/**
+ * Reflete MetaPhoneSummaryResponse / MetaPhoneDetailResponse do backend.
+ * MetaPhone agora vive exclusivamente no admin_db.
+ * accessToken NÃO é retornado pelo backend (segurança) — apenas indicado via hasToken.
+ */
 export interface MetaPhone {
-  id: number; name: string; displayPhoneNumber: string;
-  phoneNumberId: string; businessAccountId: string | null;
-  accessToken: string | null; active: boolean;
-  createdAt: string; updatedAt: string;
+  id: number;
+  tenantId: number;
+  tenantName: string;
+  name: string;
+  displayPhoneNumber: string;
+  phoneNumberId: string;
+  businessAccountId: string | null;
+  accessToken?: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface CreateMetaPhoneRequest {
-  name: string; displayPhoneNumber: string; phoneNumberId: string;
-  businessAccountId?: string; accessToken?: string;
+  name: string;
+  displayPhoneNumber: string;
+  phoneNumberId: string;
+  businessAccountId?: string;
+  accessToken?: string;
+  /** Obrigatório para MASTER ao criar */
+  tenantId?: number;
 }
 
 export interface UpdateMetaPhoneRequest {
-  name?: string; displayPhoneNumber?: string; phoneNumberId?: string;
-  businessAccountId?: string; accessToken?: string; active?: boolean;
+  name?: string;
+  displayPhoneNumber?: string;
+  phoneNumberId?: string;
+  businessAccountId?: string;
+  /** Apenas MASTER pode alterar */
+  accessToken?: string;
+  active?: boolean;
+  /** Apenas MASTER pode trocar o tenant */
+  tenantId?: number;
 }
 
 // ── Leads ─────────────────────────────────────────────────────────────────
@@ -186,12 +207,8 @@ export interface DisparoPreviewResponse {
 }
 
 export interface DisparoStartRequest {
-  workflowId: number;
-  runId: string;
-  fileName: string;
-  batchSize: number;
-  intervalMinutes: number;
-  scheduledAt?: string | null;
+  workflowId: number; runId: string; fileName: string;
+  batchSize: number; intervalMinutes: number; scheduledAt?: string | null;
 }
 
 export interface DisparoItemResponse {
@@ -205,7 +222,6 @@ export interface DisparoResultResponse {
   items: DisparoItemResponse[];
 }
 
-// ── Lead Batch (Histórico) ────────────────────────────────────────────────
 export interface LeadBatchSummary {
   id: number; fileName: string; runId: string;
   workflowId: number | null; workflowName: string | null;
@@ -244,6 +260,3 @@ export interface Page<T> {
 // ── Toast ─────────────────────────────────────────────────────────────────
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast { id: string; type: ToastType; message: string; duration?: number; }
-
-
-
