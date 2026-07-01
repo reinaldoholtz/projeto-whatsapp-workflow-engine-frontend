@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { LeadDisparoService } from '@core/services/lead-disparo.service';
 import { ToastService } from '@core/services/toast.service';
-import { LeadBatchSummary, LeadBatchDetail, BatchStatus } from '@shared/models';
+import { LeadBatchSummary, LeadBatchDetail, BatchStatus, DisparoItemResponse } from '@shared/models';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -20,14 +20,13 @@ const BATCH_STATUS_CONFIG: Record<string, { label: string; css: string; icon: st
 };
 
 const ITEM_STATUS_CONFIG: Record<string, { label: string; css: string; icon: string }> = {
-  PENDENTE:           { label: 'Pendente',     css: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',               icon: 'schedule'       },
+  PENDENTE:           { label: 'Pendente',     css: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',                 icon: 'schedule'       },
+  PROCESSANDO:        { label: 'Processando',  css: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400',                  icon: 'hourglass_top'  },
   ENVIADO:            { label: 'Enviado',       css: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: 'check_circle'   },
   ENTREGUE:           { label: 'Entregue',      css: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',             icon: 'done_all'       },
   LIDO:               { label: 'Lido',          css: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',     icon: 'mark_chat_read' },
-  NUMERO_INVALIDO:    { label: 'Nº Inválido',   css: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',                 icon: 'cancel'         },
-  NAO_POSSUI_WHATSAPP:{ label: 'Sem WhatsApp',  css: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',         icon: 'do_not_disturb' },
   DUPLICADO:          { label: 'Duplicado',     css: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',             icon: 'content_copy'   },
-  ERRO:               { label: 'Erro',          css: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',                 icon: 'error'          },
+  FALHA:              { label: 'Falha',         css: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',                 icon: 'error'          },
 };
 
 @Component({
@@ -340,9 +339,27 @@ const ITEM_STATUS_CONFIG: Record<string, { label: string; css: string; icon: str
                 </ng-container>
 
                 <ng-container matColumnDef="error">
-                  <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Erro</th>
+                  <th mat-header-cell *matHeaderCellDef
+                      class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    Erro
+                  </th>
                   <td mat-cell *matCellDef="let i" class="px-4 py-3">
-                    <span class="text-xs text-red-500">{{ i.errorDetail || '—' }}</span>
+                    @if (i.errorSummary) {
+                      <div class="space-y-1">
+                        <div
+                          class="text-xs font-medium text-red-600"
+                          [title]="getErrorTooltip(i)">
+                          {{ getError(i) }}
+                        </div>
+                        @if (i.metaErrorCode) {
+                          <div class="text-[11px] text-gray-500">
+                            Código Meta: {{ i.metaErrorCode }}
+                          </div>
+                        }
+                      </div>
+                    } @else {
+                      <span class="text-gray-400">—</span>
+                    }
                   </td>
                 </ng-container>
 
@@ -426,6 +443,19 @@ export class LeadDisparoHistoricoPageComponent implements OnInit {
     });
   }
 
+  getError(item: DisparoItemResponse): string {
+    return item.errorSummary ?? '—';
+  }
+
+  getErrorTooltip(item: DisparoItemResponse): string {
+
+    if (item.metaErrorDetail) {
+      return item.metaErrorDetail;
+    }
+
+    return item.errorDetail ?? '';
+  }
+
   batchStatusLabel(s: string) { return BATCH_STATUS_CONFIG[s]?.label ?? s; }
   batchStatusClass(s: string) { return BATCH_STATUS_CONFIG[s]?.css ?? ''; }
   batchStatusIcon(s: string)  { return BATCH_STATUS_CONFIG[s]?.icon ?? 'help'; }
@@ -433,4 +463,5 @@ export class LeadDisparoHistoricoPageComponent implements OnInit {
   itemStatusLabel(s: string) { return ITEM_STATUS_CONFIG[s]?.label ?? s; }
   itemStatusClass(s: string) { return ITEM_STATUS_CONFIG[s]?.css ?? ''; }
   itemStatusIcon(s: string)  { return ITEM_STATUS_CONFIG[s]?.icon ?? 'help'; }
+  
 }

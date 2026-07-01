@@ -11,6 +11,7 @@ interface NavItem {
   icon: string;
   route: string;
   roles?: ('MASTER' | 'ADMIN' | 'CORRETOR' | 'OPERADOR')[];
+  exact?: boolean;
   dividerBefore?: boolean;
   subLabel?: string;
 }
@@ -78,7 +79,7 @@ interface NavItem {
             <a
               [routerLink]="item.route"
               routerLinkActive="bg-primary-600/20 text-primary-400 border-primary-500/50"
-              [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400
                      hover:bg-slate-800 hover:text-white transition-all duration-150
                      border border-transparent"
@@ -122,9 +123,9 @@ export class SidebarComponent {
 
   { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
 
-  { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
+  { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
 
-  { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
+  { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
 
   { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
 

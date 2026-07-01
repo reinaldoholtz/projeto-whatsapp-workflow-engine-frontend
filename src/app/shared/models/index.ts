@@ -210,10 +210,27 @@ export interface DisparoStartRequest {
   workflowId: number; runId: string; fileName: string;
   batchSize: number; intervalMinutes: number; scheduledAt?: string | null;
 }
-
 export interface DisparoItemResponse {
-  id: number; leadName: string; phoneNumber: string;
-  status: DisparoStatus; errorDetail: string | null; processedAt: string;
+  id: number;
+
+  leadName: string;
+  phoneNumber: string;
+
+  status: DisparoStatus;
+
+  errorSummary?: string;
+
+  errorDetail?: string;
+
+  metaErrorCode?: number;
+  metaErrorTitle?: string;
+  metaErrorDetail?: string;
+
+  whatsappMessageId?: string;
+
+  processedAt: string;
+  deliveredAt?: string;
+  readAt?: string;
 }
 
 export interface DisparoResultResponse {
@@ -234,9 +251,19 @@ export interface LeadBatchSummary {
 }
 
 export interface DisparoItemSummary {
-  id: number; leadName: string | null; phoneNumber: string;
-  status: string; errorDetail: string | null; whatsappMessageId: string | null;
-  processedAt: string; deliveredAt: string | null; readAt: string | null;
+  id: number; 
+  leadName: string | null; 
+  phoneNumber: string;
+  status: string; 
+  errorDetail: string | null; 
+  whatsappMessageId: string | null;
+  errorSummary: string | null;
+  processedAt: string; 
+  deliveredAt: string | null; 
+  readAt: string | null;
+  metaErrorCode: string | null;
+  metaErrorTitle: string | null;
+  metaErrorDetail: string | null;
 }
 
 export interface LeadBatchDetail {

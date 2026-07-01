@@ -83,7 +83,7 @@ import { startWith } from 'rxjs';
               <!-- Profile -->
               <ng-container matColumnDef="profile">
                 <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Nome WhatsApp
+                  Nome Cliente no WhatsApp
                 </th>
                 <td mat-cell *matCellDef="let lead" class="px-4 py-3">
                   <div class="flex items-center gap-3">
@@ -102,7 +102,7 @@ import { startWith } from 'rxjs';
 
               <!-- LeadName -->
               <ng-container matColumnDef="leadName">
-                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome no Disparo</th>
+                <th mat-header-cell *matHeaderCellDef class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nome Cliente no Disparo</th>
                 <td mat-cell *matCellDef="let lead" class="px-4 py-3">
                   <span class="text-sm text-gray-700 dark:text-gray-300">{{ lead.leadName || '—' }}</span>
                 </td>
