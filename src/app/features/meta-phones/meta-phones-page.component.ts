@@ -400,21 +400,34 @@ export class MetaPhonesPageComponent implements OnInit {
 
     const phones$ = this.metaPhoneService.getAll();
 
-    if (this.auth.isMaster()) {
-      // MASTER precisa da lista de tenants para o select do formulário
-      forkJoin({ phones: phones$, tenants: this.tenantService.getAll() }).subscribe({
-        next: ({ phones, tenants }) => {
-          this.phones.set(phones);
-          this.tenants.set(tenants.filter(t => t.active));
-          this.loading.set(false);
-        },
-        error: () => this.loading.set(false),
-      });
+    console.log('Valor de this.auth.isMasterAdminMode() = ', this.auth.isMasterAdminMode());
+
+    if (this.auth.isMasterAdminMode()) {
+
+        // Apenas no admin_db carregamos a lista de tenants
+        forkJoin({
+            phones: phones$,
+            tenants: this.tenantService.getAll()
+        }).subscribe({
+            next: ({ phones, tenants }) => {
+                this.phones.set(phones);
+                this.tenants.set(tenants.filter(t => t.active));
+                this.loading.set(false);
+            },
+            error: () => this.loading.set(false),
+        });
+
     } else {
-      phones$.subscribe({
-        next:  p => { this.phones.set(p); this.loading.set(false); },
-        error: () => this.loading.set(false),
-      });
+        // ADMIN ou MASTER dentro do tenant
+        phones$.subscribe({
+            next: phones => {
+                this.phones.set(phones);
+                this.tenants.set([]); // limpa qualquer tenant carregado anteriormente
+                this.loading.set(false);
+            },
+            error: () => this.loading.set(false),
+        });
+
     }
   }
 
