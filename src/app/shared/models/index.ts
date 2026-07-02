@@ -11,6 +11,8 @@ export interface AuthResponse {
   tenantId?: number | null;
   databaseName?: string | null;
   adminMode?: boolean | null;
+  executionContext?: 'ADMIN_DB' | 'TENANT' | null;
+  executionMode?: 'STANDARD' | 'MASTER_ADMIN' | 'MASTER_TENANT' | null;
   tenantName?: string | null;
 }
 
@@ -21,6 +23,8 @@ export interface AuthUser {
   tenantId?: number | null;
   databaseName?: string | null;
   adminMode?: boolean | null;
+  executionContext?: 'ADMIN_DB' | 'TENANT' | null;
+  executionMode?: 'STANDARD' | 'MASTER_ADMIN' | 'MASTER_TENANT' | null;
   tenantName?: string | null;
 }
 

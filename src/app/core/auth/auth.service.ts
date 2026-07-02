@@ -21,8 +21,20 @@ export class AuthService {
   readonly loading    = this._loading.asReadonly();
   readonly isLoggedIn = computed(() => !!this._user());
   readonly isMaster   = computed(() => this._user()?.role === 'MASTER');
-  readonly isMasterAdminMode = computed(() => this.isMaster() && !!this._user()?.adminMode);
-  readonly isMasterTenantMode = computed(() => this.isMaster() && !this._user()?.adminMode);
+  readonly isMasterAdminMode = computed(() => {
+    const user = this._user();
+    if (user?.role !== 'MASTER') return false;
+    return user.executionMode
+      ? user.executionMode === 'MASTER_ADMIN'
+      : !!user.adminMode;
+  });
+  readonly isMasterTenantMode = computed(() => {
+    const user = this._user();
+    if (user?.role !== 'MASTER') return false;
+    return user.executionMode
+      ? user.executionMode === 'MASTER_TENANT'
+      : !user.adminMode;
+  });
   readonly isAdmin    = computed(() => this._user()?.role === 'ADMIN' || this.isMaster());
   readonly tenantId   = computed(() => this._user()?.tenantId ?? null);
   readonly databaseName = computed(() => this._user()?.databaseName ?? null);
@@ -86,6 +98,8 @@ export class AuthService {
       tenantId:     res.tenantId ?? null,
       databaseName: res.databaseName ?? null,
       adminMode:    res.adminMode ?? null,
+      executionContext: res.executionContext ?? null,
+      executionMode: res.executionMode ?? null,
       tenantName:   res.tenantName ?? null,
     });
   }
@@ -99,6 +113,8 @@ export class AuthService {
       tenantId:     res.tenantId ?? null,
       databaseName: res.databaseName ?? null,
       adminMode:    res.adminMode ?? null,
+      executionContext: res.executionContext ?? null,
+      executionMode: res.executionMode ?? null,
       tenantName:   res.tenantName ?? null,
     };
     localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -127,7 +143,7 @@ export class AuthService {
     }
 
     // Master dentro do tenant age como ADMIN
-    if (user.role === 'MASTER' && !user.adminMode) {
+    if (user.role === 'MASTER' && this.isMasterTenantMode()) {
       return 'ADMIN';
     }
 

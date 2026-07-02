@@ -22,14 +22,14 @@ import { forkJoin } from 'rxjs';
       <div class="page-header">
         <div>
           <h1>Canais WhatsApp</h1>
-          @if (auth.isMaster()) {
+          @if (auth.isMasterAdminMode()) {
             <p>Administração global de números Meta — {{ phones().length }} número(s) cadastrado(s)</p>
           } @else {
             <p>Números WhatsApp disponíveis para este tenant</p>
           }
         </div>
         <!-- Apenas MASTER pode criar -->
-        @if (auth.isMaster()) {
+        @if (auth.isMasterAdminMode()) {
           <button (click)="openForm()" class="btn-primary">
             <span class="material-icons-round text-base">add</span>
             Novo Número
@@ -38,7 +38,7 @@ import { forkJoin } from 'rxjs';
       </div>
 
       <!-- Aviso ADMIN somente leitura -->
-      @if (!auth.isMaster()) {
+      @if (!auth.isMasterAdminMode()) {
         <div class="card p-4 flex items-start gap-3 bg-blue-50 dark:bg-blue-900/10
                     border-blue-200 dark:border-blue-800">
           <span class="material-icons-round text-blue-500 flex-shrink-0 mt-0.5">info</span>
@@ -95,7 +95,7 @@ import { forkJoin } from 'rxjs';
               </ng-container>
 
               <!-- Tenant (apenas MASTER vê) -->
-              @if (auth.isMaster()) {
+              @if (auth.isMasterAdminMode()) {
                 <ng-container matColumnDef="tenant">
                   <th mat-header-cell *matHeaderCellDef
                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -147,7 +147,7 @@ import { forkJoin } from 'rxjs';
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef class="px-4 py-3 w-20"></th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
-                  @if (auth.isMaster()) {
+                  @if (auth.isMasterAdminMode()) {
                     <div class="flex items-center gap-1">
                       <button (click)="openForm(p)"
                         class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
@@ -195,7 +195,7 @@ import { forkJoin } from 'rxjs';
     </div>
 
     <!-- ── Form Dialog — apenas MASTER ─────────────────────────────────────── -->
-    @if (showForm() && auth.isMaster()) {
+    @if (showForm() && auth.isMasterAdminMode()) {
       <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in overflow-y-auto">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg my-4 animate-slide-in">
 
@@ -379,7 +379,7 @@ export class MetaPhonesPageComponent implements OnInit {
   /** Colunas visíveis — MASTER vê tenant, ADMIN não */
   visibleColumns = computed(() => {
     const base = ['phone', 'phoneNumberId', 'token', 'active', 'actions'];
-    return this.auth.isMaster()
+    return this.auth.isMasterAdminMode()
       ? ['phone', 'phoneNumberId', 'tenant', 'token', 'active', 'actions']
       : base;
   });
@@ -399,8 +399,6 @@ export class MetaPhonesPageComponent implements OnInit {
     this.loading.set(true);
 
     const phones$ = this.metaPhoneService.getAll();
-
-    console.log('Valor de this.auth.isMasterAdminMode() = ', this.auth.isMasterAdminMode());
 
     if (this.auth.isMasterAdminMode()) {
 

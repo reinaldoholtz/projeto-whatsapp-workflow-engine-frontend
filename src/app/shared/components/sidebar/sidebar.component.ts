@@ -37,8 +37,8 @@ interface NavItem {
             </span>
           } @else if (auth.isMasterTenantMode()) {
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold
-                         bg-emerald-500/20 text-emerald-300 mt-0.5">
-              <span class="material-icons-round text-xs">storefront</span> TENANT
+                         bg-primary-500/20 text-primary-300 mt-0.5">
+              <span class="material-icons-round text-xs">admin_panel_settings</span> ADMIN
             </span>
           } @else if (auth.isMaster()) {
             <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold
@@ -99,7 +99,7 @@ interface NavItem {
       <div class="border-t border-slate-700/50 p-3">
         <div class="flex items-center gap-3 px-2 py-2">
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
-            [ngClass]="auth.isMasterAdminMode() ? 'bg-amber-600' : (auth.isMaster() ? 'bg-purple-600' : 'bg-primary-600')">
+            [ngClass]="auth.isMasterAdminMode() ? 'bg-amber-600' : 'bg-primary-600'">
             <span class="text-white text-sm font-semibold">
               {{ auth.user()?.email?.charAt(0)?.toUpperCase() }}
             </span>
@@ -159,6 +159,10 @@ export class SidebarComponent {
   }
 
   roleLabel(role?: string): string {
+    if (this.auth.isMasterTenantMode()) {
+      return 'Administrador';
+    }
+
     const map: Record<string, string> = {
       MASTER:   'Master Admin',
       ADMIN:    'Administrador',
