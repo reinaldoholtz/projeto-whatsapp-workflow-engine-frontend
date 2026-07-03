@@ -22,6 +22,8 @@ export class WorkflowService {
   createStep(workflowId: number, req: CreateStepRequest) { return this.http.post<WorkflowStep>(`${this.base}/${workflowId}/steps`, req); }
   updateStep(workflowId: number, stepId: number, req: CreateStepRequest) { return this.http.put<WorkflowStep>(`${this.base}/${workflowId}/steps/${stepId}`, req); }
   deleteStep(workflowId: number, stepId: number) { return this.http.delete<void>(`${this.base}/${workflowId}/steps/${stepId}`); }
+  toggleStepActive(workflowId: number, stepId: number) { return this.http.patch<void>(`${this.base}/${workflowId}/steps/${stepId}/toggle-active`, {} );
+}
 
   getDocuments(workflowId: number)   { return this.http.get<WorkflowRequiredDocument[]>(`${this.base}/${workflowId}/documents`); }
   createDocument(workflowId: number, req: CreateDocumentRequest) { return this.http.post<WorkflowRequiredDocument>(`${this.base}/${workflowId}/documents`, req); }

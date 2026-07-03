@@ -120,11 +120,21 @@ const RESPONSE_TYPE_LABELS: Record<ResponseType, { label: string; color: string 
                              hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors">
                       <span class="material-icons-round text-base">edit</span>
                     </button>
+                    <button (click)="toggleActiveStep(step)"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg transition-colors"
+                            [ngClass]="step.active
+                              ? 'text-emerald-600 hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-900/20'
+                              : 'text-gray-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-900/20'"
+                            [title]="step.active ? 'Desativar etapa' : 'Ativar etapa'">
+                      <span class="material-icons-round text-base">
+                        {{ step.active ? 'toggle_on' : 'toggle_off' }}
+                      </span>
+                    </button>
                     <button (click)="deleteStep(step)"
                       class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
                              hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors">
                       <span class="material-icons-round text-base">delete</span>
-                    </button>
+                    </button>                                     
                   </div>
                 </div>
               </div>
@@ -265,6 +275,7 @@ export class WorkflowStepsPageComponent implements OnInit {
     validOptionsRaw:     [''],
     allowsSpecialist:    [true],
     allowsReset:         [true],
+    active:              [true],
   });
 
   ngOnInit() {
@@ -292,6 +303,7 @@ export class WorkflowStepsPageComponent implements OnInit {
       responseType: step?.responseType ?? 'TEXT',
       validationRegex: step?.validationRegex ?? '',
       validOptionsRaw: opts,
+      active: step?.active ?? true,
       allowsSpecialist: step?.allowsSpecialist ?? true,
       allowsReset: step?.allowsReset ?? true,
     });
@@ -317,6 +329,7 @@ export class WorkflowStepsPageComponent implements OnInit {
       responseType:        v.responseType as ResponseType,
       validationRegex:     v.validationRegex ?? '',
       validOptions,
+      active:             v.active ?? true,
       allowsSpecialist:    v.allowsSpecialist ?? true,
       allowsReset:         v.allowsReset ?? true,
     };
@@ -340,5 +353,24 @@ export class WorkflowStepsPageComponent implements OnInit {
       next:  () => { this.toast.success('Etapa removida!'); this.load(); },
       error: () => this.toast.error('Erro ao remover etapa.'),
     });
+  }
+
+  toggleActiveStep(step: WorkflowStep) {
+    this.wfService.toggleStepActive(
+        this.workflowId(),
+        step.id
+    ).subscribe({
+        next: () => {
+            this.toast.success(
+                step.active
+                    ? 'Etapa desativada.'
+                    : 'Etapa ativada.'
+            );
+            this.load();
+        },
+        error: () =>
+            this.toast.error('Erro ao alterar a etapa.')
+    });
+
   }
 }
