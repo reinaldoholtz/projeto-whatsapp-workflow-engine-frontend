@@ -7,7 +7,8 @@ import { LeadDisparoService } from '@core/services/lead-disparo.service';
 import { WorkflowService } from '@core/services/workflow.service';
 import { ToastService } from '@core/services/toast.service';
 import {
-  Workflow, DisparoPreviewResponse, DisparoResultResponse, DisparoStatus
+  Workflow, DisparoPreviewResponse, DisparoResultResponse, DisparoStatus,
+  LeadBatchDetail
 } from '@shared/models';
 
 type PageStep = 'setup' | 'preview' | 'running' | 'result';
@@ -50,17 +51,20 @@ const STATUS_CONFIG: Record<string, { label: string; css: string; icon: string }
             <!-- Workflow -->
             <div>
               <label class="form-label">1. Selecione o Workflow *</label>
-              <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base">account_tree</span>
-                <select [value]="selectedWorkflowId()"
-                  (change)="selectedWorkflowId.set(+$any($event.target).value)"
-                  class="form-input pl-9">
-                  <option value="0">— Selecione um workflow —</option>
-                  @for (wf of workflows(); track wf.id) {
-                    <option [value]="wf.id">{{ wf.name }}</option>
-                  }
-                </select>
-              </div>
+
+              <select
+                [value]="selectedWorkflowId()"
+                (change)="selectedWorkflowId.set(+$any($event.target).value)"
+                class="form-input">
+                <option value="0">— Selecione um workflow —</option>
+
+                @for (wf of workflows(); track wf.id) {
+                  <option [value]="wf.id">
+                    {{ wf.name }}
+                  </option>
+                }
+
+              </select>
             </div>
 
             <!-- File Upload -->
@@ -248,11 +252,24 @@ const STATUS_CONFIG: Record<string, { label: string; css: string; icon: string }
           } @else {
             <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Disparo em andamento...</h2>
             <p class="text-gray-500 text-sm mb-4">Enviando em lotes de {{ batchSizeCtrl.value }} leads a cada {{ intervalCtrl.value }} minutos.</p>
-            <div class="w-48 h-2 bg-gray-100 dark:bg-slate-700 rounded-full mx-auto overflow-hidden">
-              <div class="h-full bg-primary-600 rounded-full animate-pulse w-3/4"></div>
+            <div class="w-48 h-2 bg-gray-100 dark:bg-slate-700 rounded-full mx-auto overflow-hidden">            
+              <div class="h-full bg-primary-600 rounded-full transition-all duration-500" [style.width.%]="batch()?.batch?.progressPct ?? 0"></div>
+              <p class="mt-3 text-sm text-gray-500"> 
+                {{ batch()?.batch?.processedRecords ?? 0 }} / {{ batch()?.batch?.totalRecords ?? 0 }}
+                processados
+              </p>
             </div>
           }
           <div class="flex gap-3 justify-center mt-6">
+            <button
+                (click)="load()"
+                [disabled]="loading()"
+                class="btn-secondary">
+                <span class="material-icons-round text-base" [class.animate-spin]="loading()">
+                    refresh
+                </span>
+                Atualizar
+            </button>
             <a routerLink="/lead-disparo/historico" class="btn-secondary">
               <span class="material-icons-round text-base">history</span>
               Ver Histórico
@@ -326,6 +343,9 @@ export class LeadDisparoPageComponent implements OnInit {
   preview            = signal<DisparoPreviewResponse | null>(null);
   currentRunId       = signal<string | null>(null);
   isScheduled        = signal(false);
+  currentBatchId     = signal<number | null>(null);
+  batch              = signal<LeadBatchDetail | null>(null);
+  loading            = signal(false);
 
   batchSizeCtrl   = this.fb.control(20, [Validators.required, Validators.min(1)]);
   intervalCtrl    = this.fb.control(60, [Validators.required, Validators.min(1)]);
@@ -401,8 +421,35 @@ export class LeadDisparoPageComponent implements OnInit {
       intervalMinutes: this.intervalCtrl.value ?? 60,
       scheduledAt:     scheduled,
     }).subscribe({
-      next: () => { this.step.set('running'); this.starting.set(false); this.toast.success(scheduled ? 'Disparo agendado!' : 'Disparo iniciado!'); },
+      next: response => {
+        this.currentBatchId.set(response.batchId);
+        this.currentRunId.set(response.runId);
+        this.step.set('running');
+        this.starting.set(false);
+        this.toast.success(response.message);
+      },
       error: e => { this.toast.error(e?.error?.message ?? 'Erro ao iniciar disparo.'); this.starting.set(false); },
+    });
+  }
+
+  load() {
+    const batchId = this.currentBatchId();
+    if (!batchId) {
+      return;
+    }
+
+    this.loading.set(true);
+    this.disparoService.getBatch(batchId).subscribe({
+      next: batch => {
+        this.batch.set(batch);
+        this.loading.set(false);
+        if (batch.batch.status === 'FINALIZADO') {
+          this.toast.success('Disparo finalizado!');
+        }
+      },
+      error: () => {
+        this.loading.set(false);
+      }
     });
   }
 

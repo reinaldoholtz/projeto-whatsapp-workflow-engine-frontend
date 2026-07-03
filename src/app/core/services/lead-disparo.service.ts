@@ -3,8 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '@env/environment';
 import {
   DisparoPreviewResponse, DisparoStartRequest,
-  DisparoResultResponse, LeadBatchSummary, LeadBatchDetail
+  DisparoResultResponse, LeadBatchSummary, LeadBatchDetail,
+  DisparoStartResponse
 } from '@shared/models';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class LeadDisparoService {
@@ -18,9 +20,10 @@ export class LeadDisparoService {
     return this.http.post<DisparoPreviewResponse>(`${this.base}/preview`, form);
   }
 
-  start(req: DisparoStartRequest) {
-    return this.http.post<{ batchId: number; runId: string; status: string; scheduled: boolean; message: string }>(
-      `${this.base}/start`, req
+  start(req: DisparoStartRequest): Observable<DisparoStartResponse> {
+    return this.http.post<DisparoStartResponse>(
+      `${this.base}/start`,
+      req
     );
   }
 
@@ -35,5 +38,12 @@ export class LeadDisparoService {
 
   getBatch(batchId: number) {
     return this.http.get<LeadBatchDetail>(`${this.base}/batches/${batchId}`);
+  }
+
+  cancelBatch(batchId: number) {
+    return this.http.post<{ batchId: number; status: string; message: string }>(
+      `${this.base}/batches/${batchId}/cancel`,
+      {}
+    );
   }
 }

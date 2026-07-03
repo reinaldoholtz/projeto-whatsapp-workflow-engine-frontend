@@ -163,12 +163,23 @@ const ITEM_STATUS_CONFIG: Record<string, { label: string; css: string; icon: str
                 <ng-container matColumnDef="actions">
                   <th mat-header-cell *matHeaderCellDef class="px-4 py-3 w-16"></th>
                   <td mat-cell *matCellDef="let b" class="px-4 py-3">
-                    <button (click)="openDetail(b)"
+                    <div class="flex items-center justify-end gap-1">
+                      @if (canCancel(b.status)) {
+                        <button
+                          (click)="cancelBatch(b, $event)"
+                          class="w-8 h-8 flex items-center justify-center rounded-lg text-amber-500
+                                 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-600 transition-colors"
+                          title="Cancelar agendamento">
+                          <span class="material-icons-round text-base">event_busy</span>
+                        </button>
+                      }
+                      <button (click)="openDetail(b); $event.stopPropagation()"
                       class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
                              hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors"
                       title="Ver detalhes">
                       <span class="material-icons-round text-base">visibility</span>
-                    </button>
+                      </button>
+                    </div>
                   </td>
                 </ng-container>
 
@@ -209,6 +220,14 @@ const ITEM_STATUS_CONFIG: Record<string, { label: string; css: string; icon: str
                     <span class="material-icons-round text-sm">{{ batchStatusIcon(selectedBatch()!.batch.status) }}</span>
                     {{ batchStatusLabel(selectedBatch()!.batch.status) }}
                   </span>
+                  @if (canCancel(selectedBatch()!.batch.status)) {
+                    <button
+                      (click)="cancelSelectedBatch()"
+                      class="btn-secondary !py-1.5 !px-3 text-xs">
+                      <span class="material-icons-round text-sm">event_busy</span>
+                      Cancelar agendamento
+                    </button>
+                  }
                 </div>
                 <p class="text-sm text-gray-500">Workflow: <strong class="text-gray-700 dark:text-gray-300">{{ selectedBatch()!.batch.workflowName }}</strong></p>
                 <p class="text-xs text-gray-400 font-mono mt-0.5">Run ID: {{ selectedBatch()!.batch.runId }}</p>
@@ -441,6 +460,39 @@ export class LeadDisparoHistoricoPageComponent implements OnInit {
       next:  d => { this.selectedBatch.set(d); this.loadingDetail.set(false); this.itemSearchCtrl.reset(); this.itemStatusCtrl.reset(); },
       error: () => { this.toast.error('Erro ao carregar detalhes.'); this.loadingDetail.set(false); },
     });
+  }
+
+  canCancel(status: string) {
+    return status === 'AGENDADO';
+  }
+
+  cancelBatch(batch: LeadBatchSummary, event?: Event) {
+    event?.stopPropagation();
+
+    if (!confirm(`Cancelar o agendamento do lote "${batch.fileName}"?`)) {
+      return;
+    }
+
+    this.disparoService.cancelBatch(batch.id).subscribe({
+      next: ({ message }) => {
+        this.toast.success(message);
+        this.load();
+
+        if (this.selectedBatch()?.batch.id === batch.id) {
+          this.openDetail(batch);
+        }
+      },
+      error: () => this.toast.error('Nao foi possivel cancelar o agendamento.'),
+    });
+  }
+
+  cancelSelectedBatch() {
+    const detail = this.selectedBatch();
+    if (!detail) {
+      return;
+    }
+
+    this.cancelBatch(detail.batch);
   }
 
   getError(item: DisparoItemResponse): string {

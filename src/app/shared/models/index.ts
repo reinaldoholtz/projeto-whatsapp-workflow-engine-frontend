@@ -214,6 +214,14 @@ export interface DisparoStartRequest {
   workflowId: number; runId: string; fileName: string;
   batchSize: number; intervalMinutes: number; scheduledAt?: string | null;
 }
+
+export interface DisparoStartResponse {
+  batchId: number;
+  runId: string;
+  status: string;
+  scheduled: boolean;
+  message: string;
+}
 export interface DisparoItemResponse {
   id: number;
 
