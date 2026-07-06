@@ -4,7 +4,6 @@ import { NgClass } from '@angular/common';
 import { AuthService } from '@core/auth/auth.service';
 import { TenantService } from '@core/services/tenant.service';
 
-
 interface NavItem {
   id: string;
   label: string;
@@ -118,30 +117,21 @@ export class SidebarComponent {
   private tenantService = inject(TenantService);
   private router = inject(Router);
 
- navItems: NavItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
-
-  { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
-
-  { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
-
-  { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
-
-  { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
-
-  { id: 'meta-phones', label: 'Canais WhatsApp', icon: 'perm_phone_msg', route: '/meta-phones', roles: ['MASTER', 'ADMIN'] },
-
-  { id: 'users', label: 'Usuarios', icon: 'manage_accounts', route: '/users', roles: ['ADMIN'] },
-
-  { id: 'tenants', label: 'Tenants', icon: 'domain', route: '/tenants', roles: ['MASTER'], dividerBefore: true, subLabel: 'Gestao global' },
-
-  { id: 'global-users', label: 'Usuarios Globais', icon: 'supervisor_account', route: '/users', roles: ['MASTER'] },
-
-  { id: 'settings', label: 'Configuracoes', icon: 'settings', route: '/settings' }
-];
+  navItems: NavItem[] = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+    { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+    { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
+    { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
+    { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
+    { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
+    { id: 'meta-phones', label: 'Canais WhatsApp', icon: 'perm_phone_msg', route: '/meta-phones', roles: ['MASTER', 'ADMIN'] },
+    { id: 'users', label: 'Usuarios', icon: 'manage_accounts', route: '/users', roles: ['ADMIN'] },
+    { id: 'tenants', label: 'Tenants', icon: 'domain', route: '/tenants', roles: ['MASTER'], dividerBefore: true, subLabel: 'Gestao global' },
+    { id: 'global-users', label: 'Usuarios Globais', icon: 'supervisor_account', route: '/users', roles: ['MASTER'] },
+    { id: 'settings', label: 'Configuracoes', icon: 'settings', route: '/settings' }
+  ];
 
   isVisible(item: NavItem): boolean {
-
     if (!item.roles?.length) {
       return true;
     }
@@ -164,8 +154,8 @@ export class SidebarComponent {
     }
 
     const map: Record<string, string> = {
-      MASTER:   'Master Admin',
-      ADMIN:    'Administrador',
+      MASTER: 'Master Admin',
+      ADMIN: 'Administrador',
       CORRETOR: 'Corretor',
       OPERADOR: 'Operador',
     };

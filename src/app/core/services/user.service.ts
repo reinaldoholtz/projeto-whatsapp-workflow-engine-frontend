@@ -15,4 +15,5 @@ export class UserService {
   update(id: number, req: UpdateUserRequest) { return this.http.put<User>(`${this.base}/${id}`, req); }
   toggleActive(id: number)             { return this.http.patch<User>(`${this.base}/${id}/toggle-active`, {}); }
   delete(id: number)                   { return this.http.delete<void>(`${this.base}/${id}`); }
+  getBrokers()                         { return this.http.get<User[]>(this.base); }
 }

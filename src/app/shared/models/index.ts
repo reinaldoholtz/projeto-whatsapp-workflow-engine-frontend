@@ -150,6 +150,58 @@ export interface LeadDetail {
   session: LeadSession; answers: LeadAnswer[]; documents: LeadDocument[];
 }
 
+// Appointment / Agenda
+export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
+
+export interface Appointment {
+  id: number;
+  leadSessionId: number;
+  leadPhoneNumber: string;
+  leadProfileName: string | null;
+  workflowId: number | null;
+  workflowName: string | null;
+  userId: number;
+  userName: string | null;
+  appointmentDate: string;
+  appointmentTime: string;
+  status: AppointmentStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AppointmentAvailabilityResponse {
+  appointmentDate: string;
+  availableTimes: string[];
+}
+
+export type AvailabilityDayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
+
+export interface UserAvailability {
+  id: number;
+  userId: number;
+  userName: string | null;
+  dayOfWeek: AvailabilityDayOfWeek;
+  startTime: string;
+  endTime: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserAvailabilityRequest {
+  dayOfWeek: AvailabilityDayOfWeek;
+  startTime: string;
+  endTime: string;
+  active?: boolean;
+}
+
 // ── Workflows ─────────────────────────────────────────────────────────────
 export interface Workflow {
   id: number; name: string; description: string | null; active: boolean;
