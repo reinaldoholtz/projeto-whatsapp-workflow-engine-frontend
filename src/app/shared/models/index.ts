@@ -216,7 +216,7 @@ export interface WorkflowStep {
   confirmationMessage: string | null; errorMessage: string | null;
   responseType: ResponseType; validationRegex: string | null;
   validOptions: string[] | null; allowsSpecialist: boolean;
-  allowsReset: boolean; active: boolean;
+  allowsReset: boolean; allowsAppointment: boolean; active: boolean;
   nextStep?: { id: number; name: string } | null;
 }
 
@@ -237,7 +237,7 @@ export interface CreateStepRequest {
   name: string; stepOrder: number; question: string;
   confirmationMessage?: string; errorMessage?: string;
   responseType: ResponseType; validationRegex?: string;
-  validOptions?: string[]; allowsSpecialist: boolean; allowsReset: boolean;
+  validOptions?: string[]; allowsSpecialist: boolean; allowsReset: boolean; allowsAppointment: boolean;
 }
 
 export interface CreateDocumentRequest {

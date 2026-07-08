@@ -105,11 +105,16 @@ const RESPONSE_TYPE_LABELS: Record<ResponseType, { label: string; color: string 
                         [ngClass]="step.allowsSpecialist ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400'">
                         <span class="material-icons-round text-sm">support_agent</span>
                         {{ step.allowsSpecialist ? 'Permite especialista' : 'Sem especialista' }}
-                      </div>
+                      </div>                      
                       <div class="flex items-center gap-1 text-xs"
                         [ngClass]="step.allowsReset ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400'">
                         <span class="material-icons-round text-sm">refresh</span>
                         {{ step.allowsReset ? 'Permite reset' : 'Sem reset' }}
+                      </div>
+                      <div class="flex items-center gap-1 text-xs"
+                        [ngClass]="step.allowsAppointment ? 'text-green-600 dark:text-green-400' : 'text-gray-400'">
+                        <span class="material-icons-round text-sm">calendar_today</span>
+                        {{ step.allowsAppointment ? 'Permite agendamento' : 'Sem agendamento' }}
                       </div>
                     </div>
                   </div>
@@ -223,6 +228,10 @@ const RESPONSE_TYPE_LABELS: Record<ResponseType, { label: string; color: string 
                   <input type="checkbox" formControlName="allowsReset" class="w-4 h-4 rounded accent-primary-600" />
                   <span class="text-sm text-gray-700 dark:text-gray-300">Permite "reiniciar"</span>
                 </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" formControlName="allowsAppointment" class="w-4 h-4 rounded accent-primary-600" />
+                  <span class="text-sm text-gray-700 dark:text-gray-300">Permite "agenda"</span>
+                </label>
               </div>
 
               <div class="flex gap-3 pt-2 border-t border-gray-100 dark:border-slate-700">
@@ -233,6 +242,70 @@ const RESPONSE_TYPE_LABELS: Record<ResponseType, { label: string; color: string 
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      }
+
+      @if (showDeleteConfirm()) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 animate-slide-in">
+            <div class="text-center">
+              <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4
+                          bg-red-50 dark:bg-red-900/20">
+                <span class="material-icons-round text-4xl text-red-500">
+                  delete
+                </span>
+              </div>
+
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                Excluir Etapa
+              </h3>
+
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                Você está prestes a excluir a etapa abaixo:
+              </p>
+
+              <div class="mt-4 px-4 py-3 rounded-xl bg-gray-50 dark:bg-slate-700/40">
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Etapa selecionada
+                </p>
+                <p class="font-semibold text-gray-900 dark:text-white">
+                  {{ stepToDelete()?.name }}
+                </p>
+              </div>
+
+              <div class="mt-4 rounded-xl bg-amber-50 dark:bg-amber-900/20 p-3">
+                <div class="flex items-start gap-2">
+                  <span class="material-icons-round text-amber-600 text-base">
+                    warning_amber
+                  </span>
+                  <p class="text-xs text-amber-700 dark:text-amber-300 text-left">
+                    A sequência das etapas será reorganizada automaticamente após a exclusão.
+                    <br><br>
+                    Esta ação é permanente e não poderá ser desfeita.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-6">
+                <button
+                  (click)="showDeleteConfirm.set(false); stepToDelete.set(null)"
+                  class="btn-secondary flex-1 justify-center">
+                  Cancelar
+                </button>
+                <button
+                  (click)="confirmDeleteStep()"
+                  class="inline-flex items-center justify-center gap-2 flex-1
+                        px-4 py-2 rounded-lg
+                        bg-red-600 hover:bg-red-700
+                        text-white font-medium transition-colors">
+                  <span class="material-icons-round text-base">
+                    delete
+                  </span>
+                  Excluir
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       }
@@ -261,6 +334,8 @@ export class WorkflowStepsPageComponent implements OnInit {
   steps       = signal<WorkflowStep[]>([]);
   showForm    = signal(false);
   editingStep = signal<WorkflowStep | null>(null);
+  showDeleteConfirm = signal(false);
+  stepToDelete = signal<WorkflowStep | null>(null);
 
   responseTypes = Object.entries(RESPONSE_TYPE_LABELS).map(([value, cfg]) => ({ value, label: cfg.label }));
 
@@ -275,6 +350,7 @@ export class WorkflowStepsPageComponent implements OnInit {
     validOptionsRaw:     [''],
     allowsSpecialist:    [true],
     allowsReset:         [true],
+    allowsAppointment:   [true],
     active:              [true],
   });
 
@@ -306,6 +382,7 @@ export class WorkflowStepsPageComponent implements OnInit {
       active: step?.active ?? true,
       allowsSpecialist: step?.allowsSpecialist ?? true,
       allowsReset: step?.allowsReset ?? true,
+      allowsAppointment: step?.allowsAppointment ?? true,
     });
     this.showForm.set(true);
   }
@@ -332,6 +409,7 @@ export class WorkflowStepsPageComponent implements OnInit {
       active:             v.active ?? true,
       allowsSpecialist:    v.allowsSpecialist ?? true,
       allowsReset:         v.allowsReset ?? true,
+      allowsAppointment:   v.allowsAppointment ?? true,
     };
 
     const op = this.editingStep()
@@ -348,10 +426,24 @@ export class WorkflowStepsPageComponent implements OnInit {
   }
 
   deleteStep(step: WorkflowStep) {
-    if (!confirm(`Desativar a etapa "${step.name}"?`)) return;
+    this.stepToDelete.set(step);
+    this.showDeleteConfirm.set(true);
+  }
+
+  confirmDeleteStep() {
+    const step = this.stepToDelete();
+    if (!step) return;
     this.wfService.deleteStep(this.workflowId(), step.id).subscribe({
-      next:  () => { this.toast.success('Etapa removida!'); this.load(); },
-      error: () => this.toast.error('Erro ao remover etapa.'),
+      next: () => {
+        this.toast.success('Etapa removida com sucesso!');
+        this.showDeleteConfirm.set(false);
+        this.stepToDelete.set(null);
+        this.load();
+      },
+      error: () => {
+        this.toast.error('Erro ao remover etapa.');
+        this.showDeleteConfirm.set(false);
+      }
     });
   }
 
