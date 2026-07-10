@@ -324,12 +324,13 @@ export class WorkflowListPageComponent implements OnInit {
     }
     return phones;
   }
-
-  /** Indica se o número já pertence a outro workflow (não o que está sendo editado) */
+  
   isPhoneTakenByOther(phoneId: number): boolean {
     const editingId = this.editing()?.id;
     return this.workflows().some(w =>
-      w.metaPhoneId === phoneId && w.id !== editingId
+      w.active &&
+      w.metaPhoneId === phoneId &&
+      w.id !== editingId
     );
   }
 
