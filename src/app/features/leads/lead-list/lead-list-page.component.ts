@@ -87,10 +87,17 @@ import { startWith } from 'rxjs';
                 </th>
                 <td mat-cell *matCellDef="let lead" class="px-4 py-3">
                   <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0">
-                      <span class="text-primary-600 dark:text-primary-400 font-semibold text-sm">
-                        {{ (lead.profileName || lead.phoneNumber).charAt(0).toUpperCase() }}
-                      </span>
+                    <div class="w-9 h-9 rounded-full bg-primary-100 dark:bg-primary-900/40
+                                flex items-center justify-center">
+                      @if (lead.profileName) {
+                        <span class="text-primary-600 dark:text-primary-400 font-semibold text-sm">
+                          {{ lead.profileName.charAt(0).toUpperCase() }}
+                        </span>
+                      } @else {
+                        <span class="material-icons-round text-primary-600 text-base">
+                          person
+                        </span>
+                      }
                     </div>
                     <div>
                       <p class="text-sm font-medium text-gray-900 dark:text-white">{{ lead.profileName || '—' }}</p>

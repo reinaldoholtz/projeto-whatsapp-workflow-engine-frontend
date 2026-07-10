@@ -55,10 +55,12 @@ export class AuthService {
   }
 
   refreshToken() {
-    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-    if (!refreshToken) return EMPTY;
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);  
+    if (!refreshToken) return EMPTY; 
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, { refreshToken }).pipe(
-      tap(res => this.applyAuthResponse(res))
+      tap(res => {      
+        this.applyAuthResponse(res);
+      })
     );
   }
 

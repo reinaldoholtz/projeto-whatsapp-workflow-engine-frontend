@@ -28,9 +28,15 @@ type TabKey = 'timeline' | 'chat' | 'documents';
         <div class="card p-6">
           <div class="flex flex-col sm:flex-row sm:items-start gap-4">
             <div class="w-16 h-16 rounded-2xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center flex-shrink-0">
-              <span class="text-primary-600 dark:text-primary-400 text-2xl font-bold">
-                {{ (detail()!.session.profileName || detail()!.session.phoneNumber).charAt(0).toUpperCase() }}
-              </span>
+              @if (detail()!.session.profileName) {
+                <span class="text-primary-600 dark:text-primary-400 text-2xl font-bold">
+                  {{ detail()!.session.profileName!.charAt(0).toUpperCase() }}
+                </span>
+              } @else {
+                <span class="material-icons-round text-primary-600 dark:text-primary-400 text-3xl">
+                  person
+                </span>
+              }
             </div>
             <div class="flex-1">
               <div class="flex flex-wrap items-start gap-3">
