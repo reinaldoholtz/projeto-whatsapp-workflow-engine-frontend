@@ -8,6 +8,7 @@ import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
 import { Workflow, MetaPhone, User } from '@shared/models';
 import { forkJoin } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-workflow-list-page',
@@ -375,8 +376,15 @@ export class WorkflowListPageComponent implements OnInit {
 
   toggleActive(wf: Workflow) {
     this.wfService.toggleActive(wf.id).subscribe({
-      next: () => { this.toast.success('Status atualizado!'); this.load(); },
-      error: () => this.toast.error('Erro ao atualizar.'),
+      next: () => {
+        this.toast.success('Status atualizado!');
+        this.load();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.toast.error(
+          err.error?.message ?? 'Erro ao atualizar o workflow.'
+        );
+      }
     });
   }
 
