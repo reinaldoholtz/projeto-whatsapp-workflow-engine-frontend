@@ -106,6 +106,13 @@ export const routes: Routes = [
           import('./features/meta-phones/meta-phones-page.component').then(m => m.MetaPhonesPageComponent),
         title: 'Canais WhatsApp - CRM WhatsApp',
       },
+      {
+        path: 'whatsapp-templates',
+        canActivate: [masterGuard],
+        loadComponent: () =>
+          import('./features/whatsapp-templates/whatsapp-templates-page.component').then(m => m.WhatsAppTemplatesPageComponent),
+        title: 'Templates WhatsApp - CRM WhatsApp',
+      },
 
       // Usuarios
       {

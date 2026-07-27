@@ -124,6 +124,37 @@ export interface UpdateMetaPhoneRequest {
   tenantId?: number;
 }
 
+// Templates WhatsApp
+export type WhatsAppTemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
+export type WhatsAppTemplateStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'PAUSED' | 'DISABLED';
+export type WhatsAppTemplateQuality = 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN';
+export type WhatsAppTemplateVariableType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'CURRENCY' | 'DATE_TIME';
+
+export interface WhatsAppTemplateVariable {
+  name: string;
+  type: WhatsAppTemplateVariableType | string;
+}
+
+export interface WhatsAppTemplate {
+  id: number;
+  tenantId: number;
+  tenantName: string | null;
+  metaPhoneId: number;
+  metaPhoneName: string | null;
+  providerTemplateId: string;
+  name: string;
+  category: WhatsAppTemplateCategory;
+  language: string;
+  status: WhatsAppTemplateStatus;
+  quality: WhatsAppTemplateQuality;
+  content: string | null;
+  variables: WhatsAppTemplateVariable[] | null;
+  active: boolean;
+  lastSyncAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // ── Leads ─────────────────────────────────────────────────────────────────
 export type LeadStatus = 'ACTIVE' | 'HUMAN_HANDOFF' | 'COMPLETED' | 'LEAVE' | 'PAUSED';
 
@@ -208,6 +239,7 @@ export interface Workflow {
   userId?: number | null; userName?: string | null;
   metaPhoneId?: number | null; metaPhoneName?: string | null;
   metaPhoneDisplay?: string | null;
+  whatsappTemplateId?: number | null; whatsappTemplateName?: string | null;
   createdAt?: string; updatedAt?: string;
 }
 
@@ -230,7 +262,7 @@ export interface WorkflowRequiredDocument {
 }
 
 export interface CreateWorkflowRequest {
-  name: string; description?: string; userId?: number; metaPhoneId?: number;
+  name: string; description?: string; userId?: number; metaPhoneId?: number; whatsappTemplateId?: number;
 }
 
 export interface CreateStepRequest {
