@@ -5,7 +5,13 @@ import { AuthService } from '@core/auth/auth.service';
 import { ToastService } from '@core/services/toast.service';
 import { WhatsAppTemplateService } from '@core/services/whatsapp-template.service';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
-import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } from '@shared/models';
+import {
+  WhatsAppTemplate,
+  WhatsAppTemplateButton,
+  WhatsAppTemplateCategory,
+  WhatsAppTemplateQuality,
+  WhatsAppTemplateStatus,
+} from '@shared/models';
 
 @Component({
   selector: 'app-whatsapp-templates-page',
@@ -102,7 +108,7 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
                 <th mat-header-cell *matHeaderCellDef class="table-head w-20"></th>
                 <td mat-cell *matCellDef="let t" class="table-cell">
                   <button
-                    (click)="selectedTemplate.set(t)"
+                    (click)="openDetails(t)"
                     class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors"
                     title="Visualizar detalhes">
                     <span class="material-icons-round text-base">visibility</span>
@@ -126,8 +132,8 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
     </div>
 
     @if (selectedTemplate()) {
-      <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 animate-fade-in overflow-y-auto">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl my-4 animate-slide-in">
+      <div class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-6">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-slate-700">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
@@ -135,7 +141,7 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               </div>
               <div>
                 <h2 class="text-base font-semibold text-gray-900 dark:text-white">{{ selectedTemplate()!.name }}</h2>
-                <p class="text-xs text-gray-400">Template WhatsApp em modo leitura</p>
+                <p class="text-xs text-gray-400">Detalhes completos do template Meta</p>
               </div>
             </div>
             <button
@@ -145,23 +151,35 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
             </button>
           </div>
 
-          <div class="p-6 space-y-5">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex-1 overflow-y-auto p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div class="detail-box">
+                <p class="detail-label">Nome</p>
+                <p class="detail-value">{{ selectedTemplate()!.name }}</p>
+              </div>
+              <div class="detail-box">
+                <p class="detail-label">Provider Template ID</p>
+                <p class="detail-value font-mono text-xs">{{ selectedTemplate()!.providerTemplateId }}</p>
+              </div>
               <div class="detail-box">
                 <p class="detail-label">Categoria</p>
-                <p class="detail-value">{{ categoryLabel(selectedTemplate()!.category) }}</p>
+                <div><span class="badge" [ngClass]="categoryClass(selectedTemplate()!.category)">{{ categoryLabel(selectedTemplate()!.category) }}</span></div>
+              </div>
+              <div class="detail-box">
+                <p class="detail-label">Status</p>
+                <div><span class="badge" [ngClass]="statusClass(selectedTemplate()!.status)">{{ statusLabel(selectedTemplate()!.status) }}</span></div>
               </div>
               <div class="detail-box">
                 <p class="detail-label">Idioma</p>
                 <p class="detail-value">{{ selectedTemplate()!.language || '-' }}</p>
               </div>
               <div class="detail-box">
-                <p class="detail-label">Status</p>
-                <p class="detail-value">{{ statusLabel(selectedTemplate()!.status) }}</p>
+                <p class="detail-label">Parameter Format</p>
+                <p class="detail-value">{{ selectedTemplate()!.parameterFormat || '-' }}</p>
               </div>
               <div class="detail-box">
                 <p class="detail-label">Qualidade</p>
-                <p class="detail-value">{{ qualityLabel(selectedTemplate()!.quality) }}</p>
+                <div><span class="badge" [ngClass]="qualityClass(selectedTemplate()!.quality)">{{ qualityLabel(selectedTemplate()!.quality) }}</span></div>
               </div>
               <div class="detail-box">
                 <p class="detail-label">Tenant</p>
@@ -171,34 +189,125 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
                 <p class="detail-label">Canal WhatsApp</p>
                 <p class="detail-value">{{ selectedTemplate()!.metaPhoneName || '-' }}</p>
               </div>
+              <div class="detail-box xl:col-span-2">
+                <p class="detail-label">Ultima sincronizacao</p>
+                <p class="detail-value">{{ selectedTemplate()!.lastSyncAt ? (selectedTemplate()!.lastSyncAt | date:'dd/MM/yyyy HH:mm') : 'Nunca' }}</p>
+              </div>
             </div>
 
+            @if (selectedTemplate()!.header) {
+              <div class="detail-box">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <p class="detail-label">Cabecalho</p>
+                    <p class="detail-value">Componente HEADER retornado pela Meta</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    @if (selectedTemplate()!.header?.type) {
+                      <span class="chip-neutral">{{ selectedTemplate()!.header!.type }}</span>
+                    }
+                    @if (selectedTemplate()!.header?.format) {
+                      <span class="chip-neutral">{{ selectedTemplate()!.header!.format }}</span>
+                    }
+                  </div>
+                </div>
+                <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.header!.text || '-' }}</p>
+              </div>
+            }
+
             <div class="detail-box">
-              <p class="detail-label">Conteudo</p>
-              <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.content || 'Sem conteudo disponivel.' }}</p>
+              <p class="detail-label">Corpo da mensagem</p>
+              <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.body || selectedTemplate()!.content || 'Sem conteudo disponivel.' }}</p>
             </div>
+
+            @if (selectedTemplate()!.footer) {
+              <div class="detail-box">
+                <p class="detail-label">Rodape</p>
+                <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.footer }}</p>
+              </div>
+            }
+
+            @if (selectedTemplate()!.buttons?.length) {
+              <div class="detail-box">
+                <p class="detail-label">Botoes</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                  @for (button of selectedTemplate()!.buttons!; track trackButton(button, $index)) {
+                    <span class="button-chip">
+                      {{ button.text || '-' }}
+                      @if (button.type) {
+                        <span class="button-chip-type">{{ button.type }}</span>
+                      }
+                    </span>
+                  }
+                </div>
+              </div>
+            }
 
             <div class="detail-box">
               <p class="detail-label">Variaveis</p>
               @if (selectedTemplate()!.variables?.length) {
-                <div class="flex flex-wrap gap-2">
-                  @for (variable of selectedTemplate()!.variables!; track variable.name) {
-                    <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200">
-                      {{ variable.name }}
-                      <span class="text-gray-400">{{ variable.type }}</span>
-                    </span>
-                  }
+                <div class="overflow-x-auto mt-3">
+                  <table class="w-full text-sm">
+                    <thead>
+                      <tr class="border-b border-gray-200 dark:border-slate-700">
+                        <th class="py-2 pr-4 text-left text-xs uppercase tracking-wider text-gray-400">Variavel</th>
+                        <th class="py-2 pr-4 text-left text-xs uppercase tracking-wider text-gray-400">Tipo</th>
+                        <th class="py-2 pr-4 text-left text-xs uppercase tracking-wider text-gray-400">Exemplo</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (variable of selectedTemplate()!.variables!; track variable.name + '-' + ($index + 1)) {
+                        <tr class="border-b border-gray-100 dark:border-slate-800/70">
+                          <td class="py-3 pr-4 font-medium text-gray-800 dark:text-gray-100">
+                            {{ variable.position ? ('Posicao ' + variable.position) : variable.name }}
+                          </td>
+                          <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ variable.type }}</td>
+                          <td class="py-3 pr-4 text-gray-600 dark:text-gray-300">{{ variable.example || '-' }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
                 </div>
               } @else {
-                <p class="detail-value">Nenhuma variavel mapeada.</p>
+                <p class="detail-value mt-2">Nenhuma variavel mapeada.</p>
               }
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div class="detail-box">
-                <p class="detail-label">Ultima sincronizacao</p>
-                <p class="detail-value">{{ selectedTemplate()!.lastSyncAt ? (selectedTemplate()!.lastSyncAt | date:'dd/MM/yyyy HH:mm') : 'Nunca' }}</p>
-              </div>
+            <div class="detail-box">
+              <button type="button" (click)="toggleTechnicalDetails()" class="w-full flex items-center justify-between gap-3 text-left">
+                <div>
+                  <p class="detail-label">Detalhes Tecnicos</p>
+                  <p class="detail-value">Campos auxiliares e JSON bruto retornado pela Meta</p>
+                </div>
+                <span class="material-icons-round text-gray-400">{{ technicalExpanded() ? 'expand_less' : 'expand_more' }}</span>
+              </button>
+
+              @if (technicalExpanded()) {
+                <div class="mt-4 space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="mini-box">
+                      <p class="detail-label">Parameter Format</p>
+                      <p class="detail-value">{{ selectedTemplate()!.parameterFormat || '-' }}</p>
+                    </div>
+                    <div class="mini-box">
+                      <p class="detail-label">Disable iOS Autofill</p>
+                      <p class="detail-value">{{ booleanLabel(selectedTemplate()!.disableIosAutofill) }}</p>
+                    </div>
+                    <div class="mini-box">
+                      <p class="detail-label">Primary Device Delivery Only</p>
+                      <p class="detail-value">{{ booleanLabel(selectedTemplate()!.primaryDeviceDeliveryOnly) }}</p>
+                    </div>
+                  </div>
+
+                  <div class="mini-box">
+                    <p class="detail-label">JSON bruto da Meta</p>
+                    <pre class="json-box">{{ selectedTemplate()!.metaJson || '{}' }}</pre>
+                  </div>
+                </div>
+              }
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="detail-box">
                 <p class="detail-label">Criado em</p>
                 <p class="detail-value">{{ selectedTemplate()!.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
@@ -217,8 +326,13 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
     .table-head { @apply px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider; }
     .table-cell { @apply px-4 py-3; }
     .detail-box { @apply rounded-xl border border-gray-100 dark:border-slate-700 bg-gray-50 dark:bg-slate-900/40 p-4; }
+    .mini-box { @apply rounded-xl border border-gray-100 dark:border-slate-700 bg-white/70 dark:bg-slate-800/60 p-4; }
     .detail-label { @apply text-xs uppercase tracking-wider text-gray-400 mb-1; }
     .detail-value { @apply text-sm text-gray-700 dark:text-gray-200; }
+    .chip-neutral { @apply inline-flex items-center rounded-full bg-gray-100 dark:bg-slate-700 px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-200; }
+    .button-chip { @apply inline-flex items-center gap-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-300; }
+    .button-chip-type { @apply rounded-full bg-white/70 dark:bg-slate-800/80 px-2 py-0.5 text-[10px] uppercase tracking-wider text-emerald-700 dark:text-emerald-200; }
+    .json-box { @apply mt-3 overflow-x-auto rounded-xl bg-slate-950 p-4 text-xs leading-6 text-emerald-200 whitespace-pre-wrap; }
   `]
 })
 export class WhatsAppTemplatesPageComponent implements OnInit {
@@ -228,6 +342,8 @@ export class WhatsAppTemplatesPageComponent implements OnInit {
 
   loading = signal(true);
   syncing = signal(false);
+  detailsLoading = signal(false);
+  technicalExpanded = signal(false);
   templates = signal<WhatsAppTemplate[]>([]);
   selectedTemplate = signal<WhatsAppTemplate | null>(null);
   columns = computed(() => ['name', 'category', 'language', 'status', 'quality', 'tenant', 'lastSyncAt', 'actions']);
@@ -267,7 +383,36 @@ export class WhatsAppTemplatesPageComponent implements OnInit {
     });
   }
 
-  categoryLabel(category: string): string {
+  openDetails(template: WhatsAppTemplate): void {
+    this.detailsLoading.set(true);
+    this.technicalExpanded.set(false);
+    this.templateService.getById(template.id).subscribe({
+      next: detail => {
+        this.selectedTemplate.set(detail);
+        this.detailsLoading.set(false);
+      },
+      error: (e: any) => {
+        this.toast.error(e?.error?.message ?? 'Erro ao carregar o detalhe do template.');
+        this.detailsLoading.set(false);
+      },
+    });
+  }
+
+  trackButton(button: WhatsAppTemplateButton, index: number): string {
+    return `${button.type || 'button'}-${button.text || ''}-${index}`;
+  }
+
+  booleanLabel(value: boolean | null | undefined): string {
+    if (value === true) return 'Sim';
+    if (value === false) return 'Nao';
+    return '-';
+  }
+
+  toggleTechnicalDetails(): void {
+    this.technicalExpanded.set(!this.technicalExpanded());
+  }
+
+  categoryLabel(category: WhatsAppTemplateCategory | string): string {
     const map: Record<string, string> = {
       MARKETING: 'Marketing',
       UTILITY: 'Utility',

@@ -133,6 +133,19 @@ export type WhatsAppTemplateVariableType = 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMEN
 export interface WhatsAppTemplateVariable {
   name: string;
   type: WhatsAppTemplateVariableType | string;
+  example?: string | null;
+  position?: number | null;
+}
+
+export interface WhatsAppTemplateHeader {
+  type: string | null;
+  format: string | null;
+  text: string | null;
+}
+
+export interface WhatsAppTemplateButton {
+  type: string | null;
+  text: string | null;
 }
 
 export interface WhatsAppTemplate {
@@ -147,8 +160,16 @@ export interface WhatsAppTemplate {
   language: string;
   status: WhatsAppTemplateStatus;
   quality: WhatsAppTemplateQuality;
+  parameterFormat?: string | null;
+  disableIosAutofill?: boolean | null;
+  primaryDeviceDeliveryOnly?: boolean | null;
   content: string | null;
+  body?: string | null;
+  header?: WhatsAppTemplateHeader | null;
+  footer?: string | null;
+  buttons?: WhatsAppTemplateButton[] | null;
   variables: WhatsAppTemplateVariable[] | null;
+  metaJson?: string | null;
   active: boolean;
   lastSyncAt: string | null;
   createdAt: string;

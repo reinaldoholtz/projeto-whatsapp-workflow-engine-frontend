@@ -191,8 +191,7 @@ import { MetaPhone, User, WhatsAppTemplate, Workflow } from '@shared/models';
             <div>
               <label class="form-label">Template Inicial (WhatsApp)</label>
               <div class="relative">
-                <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-base text-sky-500">text_snippet</span>
-                <select formControlName="whatsappTemplateId" class="form-input pl-9">
+                <select formControlName="whatsappTemplateId" class="form-input">
                   <option [ngValue]="null">- Sem template inicial -</option>
                   @for (template of selectableTemplates(); track template.id) {
                     <option [ngValue]="template.id">
