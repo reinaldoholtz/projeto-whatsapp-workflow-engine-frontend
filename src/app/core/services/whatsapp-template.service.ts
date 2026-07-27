@@ -19,4 +19,8 @@ export class WhatsAppTemplateService {
   getById(id: number) {
     return this.http.get<WhatsAppTemplate>(`${this.base}/${id}`);
   }
+
+  sync() {
+    return this.http.post<void>(`${this.base}/sync`, {});
+  }
 }

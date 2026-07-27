@@ -16,11 +16,15 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
       <div class="page-header">
         <div>
           <h1>Templates WhatsApp</h1>
-          <p>Catálogo global de templates sincronizados no admin_db</p>
+          <p>Catalogo global de templates sincronizados no admin_db</p>
         </div>
         @if (auth.isMasterAdminMode()) {
-          <button type="button" disabled class="btn-secondary opacity-70 cursor-not-allowed">
-            <span class="material-icons-round text-base">sync</span>
+          <button type="button" (click)="syncTemplates()" [disabled]="syncing()" class="btn-secondary">
+            @if (syncing()) {
+              <span class="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin"></span>
+            } @else {
+              <span class="material-icons-round text-base">sync</span>
+            }
             Sincronizar Templates
           </button>
         }
@@ -29,9 +33,9 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
       <div class="card p-4 flex items-start gap-3 bg-blue-50 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800">
         <span class="material-icons-round text-blue-500 flex-shrink-0 mt-0.5">info</span>
         <div class="text-sm text-blue-700 dark:text-blue-300">
-          <p class="font-semibold">Estrutura preparada para sincronização futura</p>
+          <p class="font-semibold">Sincronizacao com a Meta Cloud API</p>
           <p class="text-xs mt-0.5">
-            Nesta etapa a tela é somente leitura. A sincronização com a Meta Cloud API será adicionada depois.
+            O botao sincroniza os templates dos canais Meta ativos e atualiza o admin_db sem duplicar registros.
           </p>
         </div>
       </div>
@@ -62,7 +66,7 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               <ng-container matColumnDef="language">
                 <th mat-header-cell *matHeaderCellDef class="table-head">Idioma</th>
                 <td mat-cell *matCellDef="let t" class="table-cell text-sm text-gray-600 dark:text-gray-300">
-                  {{ t.language || '—' }}
+                  {{ t.language || '-' }}
                 </td>
               </ng-container>
 
@@ -83,12 +87,12 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               <ng-container matColumnDef="tenant">
                 <th mat-header-cell *matHeaderCellDef class="table-head">Tenant</th>
                 <td mat-cell *matCellDef="let t" class="table-cell text-sm text-gray-600 dark:text-gray-300">
-                  {{ t.tenantName || '—' }}
+                  {{ t.tenantName || '-' }}
                 </td>
               </ng-container>
 
               <ng-container matColumnDef="lastSyncAt">
-                <th mat-header-cell *matHeaderCellDef class="table-head">Última sincronização</th>
+                <th mat-header-cell *matHeaderCellDef class="table-head">Ultima sincronizacao</th>
                 <td mat-cell *matCellDef="let t" class="table-cell text-sm text-gray-600 dark:text-gray-300">
                   {{ t.lastSyncAt ? (t.lastSyncAt | date:'dd/MM/yyyy HH:mm') : 'Nunca' }}
                 </td>
@@ -97,9 +101,9 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef class="table-head w-20"></th>
                 <td mat-cell *matCellDef="let t" class="table-cell">
-                  <button (click)="selectedTemplate.set(t)"
-                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400
-                           hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors"
+                  <button
+                    (click)="selectedTemplate.set(t)"
+                    class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 hover:text-primary-600 transition-colors"
                     title="Visualizar detalhes">
                     <span class="material-icons-round text-base">visibility</span>
                   </button>
@@ -107,8 +111,7 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="columns()"></tr>
-              <tr mat-row *matRowDef="let row; columns: columns();"
-                class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition-colors"></tr>
+              <tr mat-row *matRowDef="let row; columns: columns();" class="hover:bg-gray-50 dark:hover:bg-slate-700/40 transition-colors"></tr>
 
               <tr *matNoDataRow>
                 <td [colSpan]="columns().length" class="py-16 text-center text-gray-400">
@@ -135,7 +138,8 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
                 <p class="text-xs text-gray-400">Template WhatsApp em modo leitura</p>
               </div>
             </div>
-            <button (click)="selectedTemplate.set(null)"
+            <button
+              (click)="selectedTemplate.set(null)"
               class="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
               <span class="material-icons-round">close</span>
             </button>
@@ -149,7 +153,7 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               </div>
               <div class="detail-box">
                 <p class="detail-label">Idioma</p>
-                <p class="detail-value">{{ selectedTemplate()!.language || '—' }}</p>
+                <p class="detail-value">{{ selectedTemplate()!.language || '-' }}</p>
               </div>
               <div class="detail-box">
                 <p class="detail-label">Status</p>
@@ -161,21 +165,21 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
               </div>
               <div class="detail-box">
                 <p class="detail-label">Tenant</p>
-                <p class="detail-value">{{ selectedTemplate()!.tenantName || '—' }}</p>
+                <p class="detail-value">{{ selectedTemplate()!.tenantName || '-' }}</p>
               </div>
               <div class="detail-box">
                 <p class="detail-label">Canal WhatsApp</p>
-                <p class="detail-value">{{ selectedTemplate()!.metaPhoneName || '—' }}</p>
+                <p class="detail-value">{{ selectedTemplate()!.metaPhoneName || '-' }}</p>
               </div>
             </div>
 
             <div class="detail-box">
-              <p class="detail-label">Conteúdo</p>
-              <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.content || 'Sem conteúdo disponível.' }}</p>
+              <p class="detail-label">Conteudo</p>
+              <p class="detail-value whitespace-pre-wrap">{{ selectedTemplate()!.content || 'Sem conteudo disponivel.' }}</p>
             </div>
 
             <div class="detail-box">
-              <p class="detail-label">Variáveis</p>
+              <p class="detail-label">Variaveis</p>
               @if (selectedTemplate()!.variables?.length) {
                 <div class="flex flex-wrap gap-2">
                   @for (variable of selectedTemplate()!.variables!; track variable.name) {
@@ -186,13 +190,13 @@ import { WhatsAppTemplate, WhatsAppTemplateQuality, WhatsAppTemplateStatus } fro
                   }
                 </div>
               } @else {
-                <p class="detail-value">Nenhuma variável mapeada.</p>
+                <p class="detail-value">Nenhuma variavel mapeada.</p>
               }
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div class="detail-box">
-                <p class="detail-label">Última sincronização</p>
+                <p class="detail-label">Ultima sincronizacao</p>
                 <p class="detail-value">{{ selectedTemplate()!.lastSyncAt ? (selectedTemplate()!.lastSyncAt | date:'dd/MM/yyyy HH:mm') : 'Nunca' }}</p>
               </div>
               <div class="detail-box">
@@ -223,6 +227,7 @@ export class WhatsAppTemplatesPageComponent implements OnInit {
   private templateService = inject(WhatsAppTemplateService);
 
   loading = signal(true);
+  syncing = signal(false);
   templates = signal<WhatsAppTemplate[]>([]);
   selectedTemplate = signal<WhatsAppTemplate | null>(null);
   columns = computed(() => ['name', 'category', 'language', 'status', 'quality', 'tenant', 'lastSyncAt', 'actions']);
@@ -241,6 +246,23 @@ export class WhatsAppTemplatesPageComponent implements OnInit {
       error: (e: any) => {
         this.toast.error(e?.error?.message ?? 'Erro ao carregar templates WhatsApp.');
         this.loading.set(false);
+      },
+    });
+  }
+
+  syncTemplates(): void {
+    if (this.syncing()) return;
+
+    this.syncing.set(true);
+    this.templateService.sync().subscribe({
+      next: () => {
+        this.toast.success('Templates sincronizados com sucesso.');
+        this.syncing.set(false);
+        this.load();
+      },
+      error: (e: any) => {
+        this.toast.error(e?.error?.message ?? 'Erro ao sincronizar templates WhatsApp.');
+        this.syncing.set(false);
       },
     });
   }
