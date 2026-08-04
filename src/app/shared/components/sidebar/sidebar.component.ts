@@ -13,6 +13,7 @@ interface NavItem {
   exact?: boolean;
   dividerBefore?: boolean;
   subLabel?: string;
+  parentId?: string;
 }
 
 @Component({
@@ -71,26 +72,79 @@ interface NavItem {
         }
 
         @for (item of navItems; track item.id) {
-          @if (isVisible(item)) {
+          @if (isRoot(item) && isVisible(item)) {
             @if (item.dividerBefore) {
               <div class="my-2 border-t border-slate-700/50"></div>
             }
-            <a
-              [routerLink]="item.route"
-              routerLinkActive="bg-primary-600/20 text-primary-400 border-primary-500/50"
-              [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-              class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400
-                     hover:bg-slate-800 hover:text-white transition-all duration-150
-                     border border-transparent"
-            >
-              <span class="material-icons-round text-xl flex-shrink-0">{{ item.icon }}</span>
-              <div class="flex-1 min-w-0">
-                <span class="text-sm font-medium block truncate">{{ item.label }}</span>
-                @if (item.subLabel) {
-                  <span class="text-xs text-slate-500 block leading-tight">{{ item.subLabel }}</span>
+            @if (childrenOf(item.id).length > 0) {
+              <button
+                type="button"
+                (click)="toggleMenu(item.id)"
+                class="w-full flex items-center justify-between
+                      px-3 py-2.5 rounded-lg
+                      text-slate-400
+                      hover:bg-slate-800 hover:text-white
+                      transition-all duration-150"
+              >
+                <div class="flex items-center gap-3">
+                  <span class="material-icons-round text-xl">
+                    {{ item.icon }}
+                  </span>
+                  <span class="text-sm font-medium">
+                    {{ item.label }}
+                  </span>
+                </div>
+                <span class="material-icons-round">
+                  {{ isExpanded(item.id) ? 'expand_less' : 'expand_more' }}
+                </span>
+              </button>
+            } @else {
+              <a
+                [routerLink]="item.route"
+                routerLinkActive="bg-primary-600/20 text-primary-400 border-primary-500/50"
+                [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400
+                      hover:bg-slate-800 hover:text-white transition-all duration-150
+                      border border-transparent"
+              >
+                <span class="material-icons-round text-xl flex-shrink-0">
+                  {{ item.icon }}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <span class="text-sm font-medium block truncate">
+                    {{ item.label }}
+                  </span>
+                  @if (item.subLabel) {
+                    <span class="text-xs text-slate-500 block leading-tight">
+                      {{ item.subLabel }}
+                    </span>
+                  }
+                </div>
+              </a>
+            }
+            @if (isExpanded(item.id)) {
+              @for (child of childrenOf(item.id); track child.id) {
+                @if (isVisible(child)) {
+                  <a
+                    [routerLink]="child.route"
+                    routerLinkActive="bg-primary-600/20 text-primary-400"
+                    [routerLinkActiveOptions]="{ exact: child.exact ?? false }"
+                    class="flex items-center gap-3
+                          pl-11 pr-3 py-2
+                          rounded-lg
+                          text-slate-500
+                          hover:bg-slate-800 hover:text-white"
+                  >
+                    <span class="material-icons-round text-base">
+                      {{ child.icon }}
+                    </span>
+                    <span class="text-sm">
+                      {{ child.label }}
+                    </span>
+                  </a>
                 }
-              </div>
-            </a>
+              }
+            }
           }
         }
       </nav>
@@ -121,8 +175,9 @@ export class SidebarComponent {
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
-    { id: 'lead-disparo', label: 'Disparar Leads', icon: 'send', route: '/lead-disparo', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
-    { id: 'historico', label: 'Historico Disparos', icon: 'history', route: '/lead-disparo/historico', exact: true, roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], subLabel: 'Arquivos e resultados' },
+    { id: 'campaigns', label: 'Campanhas', icon: 'campaign', route: '', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
+    { id: 'lead-disparo', label: 'Novo Disparo', icon: 'send', route: '/lead-disparo', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+    { id: 'historico', label: 'Histórico', icon: 'history', route: '/lead-disparo/historico', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
     { id: 'meta-phones', label: 'Canais WhatsApp', icon: 'perm_phone_msg', route: '/meta-phones', roles: ['MASTER', 'ADMIN'] },
     { id: 'whatsapp-templates', label: 'Templates WhatsApp', icon: 'text_snippet', route: '/whatsapp-templates', roles: ['MASTER'] },
@@ -131,6 +186,8 @@ export class SidebarComponent {
     { id: 'global-users', label: 'Usuarios Globais', icon: 'supervisor_account', route: '/users', roles: ['MASTER'] },
     { id: 'settings', label: 'Configuracoes', icon: 'settings', route: '/settings' }
   ];
+
+  expandedMenus = new Set<string>();
 
   isVisible(item: NavItem): boolean {
     if (!item.roles?.length) {
@@ -162,4 +219,25 @@ export class SidebarComponent {
     };
     return role ? (map[role] ?? role) : '';
   }
+
+  childrenOf(parentId: string): NavItem[] {
+    return this.navItems.filter(item => item.parentId === parentId);
+  }
+
+  isRoot(item: NavItem): boolean {
+    return !item.parentId;
+  }
+
+  toggleMenu(id: string): void {
+    if (this.expandedMenus.has(id)) {
+      this.expandedMenus.delete(id);
+    } else {
+      this.expandedMenus.add(id);
+    }
+  }
+
+  isExpanded(id: string): boolean {
+    return this.expandedMenus.has(id);
+  }
+  
 }
