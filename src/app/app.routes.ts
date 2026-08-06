@@ -24,6 +24,13 @@ export const routes: Routes = [
 
       // Ambiente do tenant
       {
+        path: 'attendance',
+        canActivate: [tenantContextGuard],
+        loadComponent: () =>
+          import('./features/attendance/attendance-page.component').then(m => m.AttendancePageComponent),
+        title: 'Atendimento - CRM WhatsApp',
+      },
+      {
         path: 'dashboard',
         canActivate: [tenantContextGuard],
         loadComponent: () =>

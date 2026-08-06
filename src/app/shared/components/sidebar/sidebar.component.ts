@@ -173,6 +173,7 @@ export class SidebarComponent {
 
   navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+    { id: 'attendance', label: 'Atendimento', icon: 'forum', route: '/attendance', roles: ['ADMIN', 'OPERADOR'], subLabel: 'Central de conversas' },
     { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
     { id: 'campaigns', label: 'Campanhas', icon: 'campaign', route: '', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },

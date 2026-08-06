@@ -202,6 +202,104 @@ export interface LeadDetail {
   session: LeadSession; answers: LeadAnswer[]; documents: LeadDocument[];
 }
 
+// Attendance
+export type ConversationStatus =
+  | 'NEW'
+  | 'UNREAD'
+  | 'IN_PROGRESS'
+  | 'WAITING_CUSTOMER'
+  | 'SCHEDULED'
+  | 'CLOSED';
+
+export type ConversationPriority = 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+export type ConversationMessageDirection = 'INBOUND' | 'OUTBOUND' | 'INTERNAL';
+export type ConversationSenderType = 'CUSTOMER' | 'OPERATOR' | 'SYSTEM';
+export type ConversationMessageType =
+  | 'TEXT'
+  | 'IMAGE'
+  | 'DOCUMENT'
+  | 'AUDIO'
+  | 'VIDEO'
+  | 'TEMPLATE'
+  | 'SYSTEM_EVENT'
+  | 'NOTE';
+
+export interface AttendanceGroup {
+  id: number;
+  tenantId: number;
+  name: string;
+  description: string | null;
+  active: boolean;
+}
+
+export interface AttendanceConversation {
+  id: number;
+  tenantId: number;
+  channel: string;
+  provider: string;
+  contactDisplayName: string | null;
+  contactPhoneNumber: string;
+  status: ConversationStatus;
+  unreadCount: number;
+  lastMessagePreview: string | null;
+  lastInteractionAt: string | null;
+  assignedGroupId: number | null;
+  assignedOperatorId: number | null;
+  priority: ConversationPriority;
+}
+
+export interface AttendanceConversationMessage {
+  id: number;
+  direction: ConversationMessageDirection;
+  senderType: ConversationSenderType;
+  senderUserId: number | null;
+  externalMessageId: string | null;
+  type: ConversationMessageType;
+  text: string | null;
+  mediaId: string | null;
+  mimeType: string | null;
+  fileName: string | null;
+  fileSize: number | null;
+  storageUrl: string | null;
+  status: string;
+  readAt: string | null;
+  deliveredAt: string | null;
+  createdAt: string;
+}
+
+export interface AttendanceConversationNote {
+  id: number;
+  authorUserId: number;
+  content: string;
+  createdAt: string;
+}
+
+export interface AttendanceConversationDetail {
+  conversation: AttendanceConversation;
+  messages: AttendanceConversationMessage[];
+  notes: AttendanceConversationNote[];
+}
+
+export interface CreateAttendanceGroupRequest {
+  name: string;
+  description?: string;
+}
+
+export interface CreateAttendanceConversationRequest {
+  channel: string;
+  provider: string;
+  channelAccountId: string;
+  contactId: string;
+  contactDisplayName?: string;
+  contactPhoneNumber: string;
+  assignedGroupId?: number | null;
+  assignedOperatorId?: number | null;
+}
+
+export interface CreateConversationNoteRequest {
+  content: string;
+}
+
 // Appointment / Agenda
 export type AppointmentStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED';
 
