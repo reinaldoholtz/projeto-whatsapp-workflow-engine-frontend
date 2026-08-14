@@ -88,41 +88,61 @@ export interface CreateTenantRequest {
  * MetaPhone agora vive exclusivamente no admin_db.
  * accessToken NÃO é retornado pelo backend (segurança) — apenas indicado via hasToken.
  */
-export interface MetaPhone {
+export type ChannelType = 'WHATSAPP' | 'INSTAGRAM' | 'MESSENGER' | 'TELEGRAM';
+
+export interface ChannelAccount {
   id: number;
   tenantId: number;
   tenantName: string;
-  name: string;
-  displayPhoneNumber: string;
-  phoneNumberId: string;
-  businessAccountId: string | null;
-  accessToken?: string | null;
+  channel: ChannelType;
+  provider: string;
+  accountName: string;
+  externalAccountId: string;
+  credentials?: string | null;
+  configuration?: string | null;
   active: boolean;
   createdAt: string;
   updatedAt?: string;
+  name?: string;
+  displayPhoneNumber?: string;
+  phoneNumberId?: string;
+  businessAccountId?: string | null;
 }
 
-export interface CreateMetaPhoneRequest {
-  name: string;
-  displayPhoneNumber: string;
-  phoneNumberId: string;
-  businessAccountId?: string;
-  accessToken?: string;
-  /** Obrigatório para MASTER ao criar */
+export interface CreateChannelAccountRequest {
   tenantId?: number;
-}
-
-export interface UpdateMetaPhoneRequest {
+  channel?: ChannelType;
+  provider?: string;
+  accountName?: string;
+  externalAccountId?: string;
+  credentials?: string;
+  configuration?: string;
   name?: string;
   displayPhoneNumber?: string;
   phoneNumberId?: string;
   businessAccountId?: string;
-  /** Apenas MASTER pode alterar */
   accessToken?: string;
-  active?: boolean;
-  /** Apenas MASTER pode trocar o tenant */
-  tenantId?: number;
 }
+
+export interface UpdateChannelAccountRequest {
+  accountName?: string;
+  channel?: ChannelType;
+  provider?: string;
+  externalAccountId?: string;
+  credentials?: string;
+  configuration?: string;
+  active?: boolean;
+  tenantId?: number;
+  name?: string;
+  displayPhoneNumber?: string;
+  phoneNumberId?: string;
+  businessAccountId?: string;
+  accessToken?: string;
+}
+
+export type MetaPhone = ChannelAccount;
+export type CreateMetaPhoneRequest = CreateChannelAccountRequest;
+export type UpdateMetaPhoneRequest = UpdateChannelAccountRequest;
 
 // Templates WhatsApp
 export type WhatsAppTemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
@@ -152,8 +172,8 @@ export interface WhatsAppTemplate {
   id: number;
   tenantId: number;
   tenantName: string | null;
-  metaPhoneId: number;
-  metaPhoneName: string | null;
+  channelAccountId?: number; metaPhoneId: number;
+  channelAccountName?: string | null; metaPhoneName: string | null;
   providerTemplateId: string;
   name: string;
   category: WhatsAppTemplateCategory;
@@ -356,7 +376,7 @@ export interface UserAvailabilityRequest {
 export interface Workflow {
   id: number; name: string; description: string | null; active: boolean;
   userId?: number | null; userName?: string | null;
-  metaPhoneId?: number | null; metaPhoneName?: string | null;
+  channelAccountId?: number | null; channelAccountName?: string | null; metaPhoneId?: number | null; metaPhoneName?: string | null;
   metaPhoneDisplay?: string | null;
   whatsappTemplateId?: number | null; whatsappTemplateName?: string | null;
   createdAt?: string; updatedAt?: string;
@@ -381,7 +401,7 @@ export interface WorkflowRequiredDocument {
 }
 
 export interface CreateWorkflowRequest {
-  name: string; description?: string; userId?: number; metaPhoneId?: number; whatsappTemplateId?: number;
+  name: string; description?: string; userId?: number; channelAccountId?: number; metaPhoneId?: number; whatsappTemplateId?: number;
 }
 
 export interface CreateStepRequest {

@@ -1,8 +1,9 @@
-import { DatePipe, NgClass } from '@angular/common';
+﻿import { DatePipe, NgClass } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AttendanceService } from '@core/services/attendance.service';
 import { ToastService } from '@core/services/toast.service';
+import { WebSocketService } from '@core/services/websocket.service';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 import {
   AttendanceConversation,
@@ -11,11 +12,12 @@ import {
   AttendanceConversationNote,
   AttendanceGroup,
 } from '@shared/models';
+import { ConversationComposerComponent, ConversationMessage } from './components/conversation-composer.component';
 
 @Component({
   selector: 'app-attendance-page',
   standalone: true,
-  imports: [DatePipe, NgClass, ReactiveFormsModule, SkeletonComponent],
+  imports: [DatePipe, NgClass, ReactiveFormsModule, SkeletonComponent, ConversationComposerComponent],
   template: `
     <div class="space-y-5">
       <div class="page-header">
@@ -130,37 +132,46 @@ import {
                     {{ selectedConversation()!.conversation.contactDisplayName || selectedConversation()!.conversation.contactPhoneNumber }}
                   </h2>
                   <p class="text-xs text-gray-500 dark:text-gray-400">
-                    {{ selectedConversation()!.conversation.contactPhoneNumber }} · {{ statusLabel(selectedConversation()!.conversation.status) }}
+                    {{ selectedConversation()!.conversation.contactPhoneNumber }} \u00b7 {{ statusLabel(selectedConversation()!.conversation.status) }}
                   </p>
                 </div>
-              </div>
-              <span class="attendance-status" [ngClass]="statusClass(selectedConversation()!.conversation.status)">
-                {{ statusLabel(selectedConversation()!.conversation.status) }}
-              </span>
+              </div>              
             </div>
 
             <div class="attendance-main-body">
-              <div class="attendance-timeline">
-                @for (message of selectedConversation()!.messages; track message.id) {
-                  <div
-                    class="flex"
-                    [ngClass]="message.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'"
-                  >
-                    <div [ngClass]="message.direction === 'OUTBOUND' ? 'chat-bubble-out' : 'chat-bubble-in'">
-                      <p class="whitespace-pre-wrap break-words text-sm">
-                        {{ message.text || fallbackMessageLabel(message) }}
-                      </p>
-                      <div class="mt-2 text-[11px] opacity-70">
-                        {{ message.createdAt | date:'dd/MM HH:mm' }}
+              <div class="attendance-timeline-wrapper">
+                <div class="attendance-timeline">
+                  @for (message of timelineMessages(); track message.id) {
+                    <div
+                      class="flex"
+                      [ngClass]="message.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'"
+                    >
+                      <div [ngClass]="message.direction === 'OUTBOUND' ? 'chat-bubble-out' : 'chat-bubble-in'">
+                        <p class="whitespace-pre-wrap break-words text-sm">
+                          {{ message.text || fallbackMessageLabel(message) }}
+                        </p>
+                        <div class="mt-2 flex items-center justify-end gap-2 text-[11px] opacity-70">
+                          <span>{{ message.createdAt | date:'dd/MM HH:mm' }}</span>
+                          @if (message.direction === 'OUTBOUND') {
+                            <span class="material-icons-round text-[14px]" [ngClass]="deliveryIconClass(message.status)">
+                              {{ deliveryIcon(message.status) }}
+                            </span>
+                          }
+                        </div>
                       </div>
                     </div>
-                  </div>
-                } @empty {
-                  <div class="attendance-empty h-full">
-                    <span class="material-icons-round text-4xl opacity-30">chat_bubble_outline</span>
-                    <p>Sem mensagens nesta conversa</p>
-                  </div>
-                }
+                  } @empty {
+                    <div class="attendance-empty h-full">
+                      <span class="material-icons-round text-4xl opacity-30">chat_bubble_outline</span>
+                      <p>Sem mensagens nesta conversa</p>
+                    </div>
+                  }
+                </div>
+
+                <app-conversation-composer
+                  [conversationId]="selectedConversationId()"
+                  (messageSent)="onMessageSent($event)"
+                />
               </div>
 
               <aside class="attendance-sidepanel">
@@ -324,15 +335,6 @@ import {
 
     .attendance-main {
       @apply overflow-hidden flex flex-col min-h-[720px] bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700;
-      background:
-        linear-gradient(180deg, rgba(248, 250, 252, 0.92), rgba(255, 255, 255, 0.98)),
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 30%);
-    }
-
-    :host-context(.dark) .attendance-main {
-      background:
-        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96)),
-        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 30%);
     }
 
     .attendance-main-header {
@@ -343,8 +345,12 @@ import {
       @apply grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_320px] flex-1 min-h-0;
     }
 
+    .attendance-timeline-wrapper {
+      @apply flex flex-col min-h-0 flex-1;
+    }
+
     .attendance-timeline {
-      @apply p-5 space-y-4 overflow-y-auto min-h-[540px];
+      @apply p-5 space-y-4 overflow-y-auto flex-1 min-h-[400px];
       background-image:
         radial-gradient(rgba(148, 163, 184, 0.12) 0.8px, transparent 0.8px);
       background-size: 18px 18px;
@@ -376,11 +382,20 @@ import {
     .attendance-empty {
       @apply flex flex-col items-center justify-center gap-3 text-sm text-gray-400 p-8;
     }
+
+    .chat-bubble-out {
+      @apply rounded-2xl rounded-br-sm bg-primary-600 text-white px-4 py-3 max-w-[70%];
+    }
+
+    .chat-bubble-in {
+      @apply rounded-2xl rounded-bl-sm bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-100 px-4 py-3 max-w-[70%];
+    }
   `]
 })
 export class AttendancePageComponent implements OnInit {
   private attendanceService = inject(AttendanceService);
   private toast = inject(ToastService);
+  private ws = inject(WebSocketService);
   private fb = inject(FormBuilder);
 
   loading = signal(true);
@@ -423,8 +438,14 @@ export class AttendancePageComponent implements OnInit {
     this.conversations().reduce((acc, conversation) => acc + conversation.unreadCount, 0)
   );
 
+  timelineMessages = computed(() => {
+    const detail = this.selectedConversation();
+    return detail?.messages ?? [];
+  });
+
   ngOnInit(): void {
     this.loadData();
+    this.ws.connect();
   }
 
   refresh(): void {
@@ -447,6 +468,29 @@ export class AttendancePageComponent implements OnInit {
         this.loadingDetail.set(false);
         this.toast.error('Erro ao carregar detalhes da conversa.');
       },
+    });
+  }
+
+  onMessageSent(message: ConversationMessage): void {
+    this.selectedConversation.update(detail => {
+      if (!detail) return detail;
+      return {
+        ...detail,
+        messages: [...detail.messages, message as AttendanceConversationMessage]
+      };
+    });
+  }
+
+  closeConversation(): void {
+    const id = this.selectedConversationId();
+    if (!id) return;
+
+    this.attendanceService.closeConversation(id).subscribe({
+      next: () => {
+        this.toast.success('Atendimento encerrado.');
+        this.refresh();
+      },
+      error: () => this.toast.error('Erro ao encerrar atendimento.')
     });
   }
 
@@ -515,6 +559,30 @@ export class AttendancePageComponent implements OnInit {
       NOTE: '[Nota interna]',
     };
     return map[message.type] ?? '[Mensagem]';
+  }
+
+  deliveryIcon(status: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'schedule',
+      SENDING: 'schedule',
+      SENT: 'check',
+      DELIVERED: 'done_all',
+      READ: 'done_all',
+      FAILED: 'error_outline',
+    };
+    return map[status] ?? 'check';
+  }
+
+  deliveryIconClass(status: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'text-gray-400',
+      SENDING: 'text-gray-400',
+      SENT: 'text-gray-400',
+      DELIVERED: 'text-blue-400',
+      READ: 'text-blue-500',
+      FAILED: 'text-red-400',
+    };
+    return map[status] ?? 'text-gray-400';
   }
 
   private loadData(showToast = false): void {

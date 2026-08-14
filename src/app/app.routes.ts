@@ -105,13 +105,18 @@ export const routes: Routes = [
         ],
       },
 
-      // Canais WhatsApp
+      // Canais / Contas de Canais
       {
-        path: 'meta-phones',
+        path: 'channel-accounts',
         canActivate: [adminGuard],
         loadComponent: () =>
           import('./features/meta-phones/meta-phones-page.component').then(m => m.MetaPhonesPageComponent),
-        title: 'Canais WhatsApp - CRM WhatsApp',
+        title: 'Contas de Canais - CRM WhatsApp',
+      },
+      {
+        path: 'meta-phones',
+        redirectTo: 'channel-accounts',
+        pathMatch: 'full',
       },
       {
         path: 'whatsapp-templates',

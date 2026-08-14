@@ -180,7 +180,7 @@ export class SidebarComponent {
     { id: 'lead-disparo', label: 'Novo Disparo', icon: 'send', route: '/lead-disparo', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'historico', label: 'Histórico', icon: 'history', route: '/lead-disparo/historico', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
-    { id: 'meta-phones', label: 'Canais WhatsApp', icon: 'perm_phone_msg', route: '/meta-phones', roles: ['MASTER', 'ADMIN'] },
+    { id: 'channel-accounts', label: 'Contas de Canais', icon: 'perm_phone_msg', route: '/channel-accounts', roles: ['MASTER', 'ADMIN'] },
     { id: 'whatsapp-templates', label: 'Templates WhatsApp', icon: 'text_snippet', route: '/whatsapp-templates', roles: ['MASTER'] },
     { id: 'users', label: 'Usuarios', icon: 'manage_accounts', route: '/users', roles: ['ADMIN'] },
     { id: 'tenants', label: 'Tenants', icon: 'domain', route: '/tenants', roles: ['MASTER'], dividerBefore: true, subLabel: 'Gestao global' },

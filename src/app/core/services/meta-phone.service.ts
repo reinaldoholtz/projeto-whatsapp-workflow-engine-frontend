@@ -1,30 +1,16 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '@env/environment';
-import { MetaPhone, CreateMetaPhoneRequest, UpdateMetaPhoneRequest } from '@shared/models';
+import { ChannelAccountService } from './channel-account.service';
+import { CreateChannelAccountRequest, UpdateChannelAccountRequest } from '@shared/models';
 
 @Injectable({ providedIn: 'root' })
 export class MetaPhoneService {
-  private http = inject(HttpClient);
-  private base = `${environment.apiUrl}/admin/meta-phones`;
+  private service = inject(ChannelAccountService);
 
-  /** Lista todos — MASTER vê todos os tenants, ADMIN vê só o próprio */
-  getAll()                                          { return this.http.get<MetaPhone[]>(this.base); }
-
-  /** Lista apenas ativos — usado no select de Workflow */
-  getAllActive()                                     { return this.http.get<MetaPhone[]>(`${this.base}/active`); }
-
-  getById(id: number)                               { return this.http.get<MetaPhone>(`${this.base}/${id}`); }
-
-  /** Apenas MASTER */
-  create(req: CreateMetaPhoneRequest)               { return this.http.post<MetaPhone>(this.base, req); }
-
-  /** Apenas MASTER */
-  update(id: number, req: UpdateMetaPhoneRequest)   { return this.http.put<MetaPhone>(`${this.base}/${id}`, req); }
-
-  /** Apenas MASTER */
-  toggleActive(id: number)                          { return this.http.patch<MetaPhone>(`${this.base}/${id}/toggle-active`, {}); }
-
-  /** Apenas MASTER */
-  delete(id: number)                                { return this.http.delete<void>(`${this.base}/${id}`); }
+  getAll()                                             { return this.service.getAll(); }
+  getAllActive()                                       { return this.service.getAllActive(); }
+  getById(id: number)                                  { return this.service.getById(id); }
+  create(req: CreateChannelAccountRequest)             { return this.service.create(req); }
+  update(id: number, req: UpdateChannelAccountRequest) { return this.service.update(id, req); }
+  toggleActive(id: number)                             { return this.service.toggleActive(id); }
+  delete(id: number)                                   { return this.service.delete(id); }
 }
