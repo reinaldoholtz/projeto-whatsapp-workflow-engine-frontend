@@ -522,3 +522,59 @@ export interface Page<T> {
 // ── Toast ─────────────────────────────────────────────────────────────────
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast { id: string; type: ToastType; message: string; duration?: number; }
+
+// ── Attendance Menu ─────────────────────────────────────────────
+export type MenuActionType = 'QUEUE' | 'APPOINTMENT' | 'HUMAN' | 'SUBMENU' | 'MESSAGE';
+
+export interface MenuOption {
+  id?: number;
+  menuId?: number;
+  position?: number;
+  label: string;
+  actionType: MenuActionType;
+  queueId?: number | null;
+  appointmentTypeId?: number | null;
+  targetMenuId?: number | null;
+  message?: string | null;
+  enabled?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AttendanceMenu {
+  id: number;
+  tenantId: number;
+  channelAccountId: number;
+  name: string;
+  active: boolean;
+  options: MenuOption[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateMenuOptionRequest {
+  position?: number;
+  label: string;
+  actionType: MenuActionType;
+  queueId?: number | null;
+  appointmentTypeId?: number | null;
+  targetMenuId?: number | null;
+  message?: string | null;
+  enabled?: boolean;
+}
+
+export interface CreateAttendanceMenuRequest {
+  channelAccountId: number;
+  name: string;
+  active?: boolean;
+  options?: CreateMenuOptionRequest[];
+}
+
+export interface UpdateAttendanceMenuRequest {
+  name: string;
+  active?: boolean;
+}
+
+export interface ReorderMenuOptionsRequest {
+  optionIds: number[];
+}

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+﻿import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { NgClass } from '@angular/common';
 import { AuthService } from '@core/auth/auth.service';
@@ -107,22 +107,23 @@ interface NavItem {
                       hover:bg-slate-800 hover:text-white transition-all duration-150
                       border border-transparent"
               >
-                <span class="material-icons-round text-xl flex-shrink-0">
+                <span class="material-icons-round text-xl">
                   {{ item.icon }}
                 </span>
-                <div class="flex-1 min-w-0">
+                <div class="flex-1 min-w-0 text-left">
                   <span class="text-sm font-medium block truncate">
                     {{ item.label }}
                   </span>
                   @if (item.subLabel) {
-                    <span class="text-xs text-slate-500 block leading-tight">
+                    <span class="text-xs text-slate-500 block leading-tight truncate">
                       {{ item.subLabel }}
                     </span>
                   }
                 </div>
               </a>
             }
-            @if (isExpanded(item.id)) {
+
+            @if (childrenOf(item.id).length > 0 && isExpanded(item.id)) {
               @for (child of childrenOf(item.id); track child.id) {
                 @if (isVisible(child)) {
                   <a
@@ -174,6 +175,7 @@ export class SidebarComponent {
   navItems: NavItem[] = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'attendance', label: 'Atendimento', icon: 'forum', route: '/attendance', roles: ['ADMIN', 'OPERADOR'], subLabel: 'Central de conversas' },
+    { id: 'attendance-menus', label: 'Menus de Atendimento', icon: 'menu_open', route: '/attendance-menus', roles: ['ADMIN'], subLabel: 'Menus interativos' },
     { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
     { id: 'campaigns', label: 'Campanhas', icon: 'campaign', route: '', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
@@ -240,5 +242,4 @@ export class SidebarComponent {
   isExpanded(id: string): boolean {
     return this.expandedMenus.has(id);
   }
-  
 }

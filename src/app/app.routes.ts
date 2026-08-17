@@ -1,4 +1,4 @@
-import { Routes } from '@angular/router';
+﻿import { Routes } from '@angular/router';
 import { authGuard, guestGuard, adminGuard, masterGuard, tenantContextGuard } from '@core/guards/auth.guard';
 
 export const routes: Routes = [
@@ -29,6 +29,13 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/attendance/attendance-page.component').then(m => m.AttendancePageComponent),
         title: 'Atendimento - CRM WhatsApp',
+      },
+      {
+        path: 'attendance-menus',
+        canActivate: [adminGuard, tenantContextGuard],
+        loadComponent: () =>
+          import('./features/attendance-menus/attendance-menus-page.component').then(m => m.AttendanceMenusPageComponent),
+        title: 'Menus de Atendimento - CRM WhatsApp',
       },
       {
         path: 'dashboard',
