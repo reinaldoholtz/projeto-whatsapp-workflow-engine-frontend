@@ -157,6 +157,19 @@ import { SkeletonComponent } from '@shared/components/skeleton/skeleton.componen
                         Entrar
                       </button>
                     }
+                    <button mat-menu-item (click)="migrateTenant(t)" [disabled]="migratingTenantId() === t.id">
+                      @if (migratingTenantId() === t.id) {
+                        <span class="material-icons-round text-blue-500 text-base mr-2 animate-spin">
+                          sync
+                        </span>
+                        Atualizando...
+                      } @else {
+                        <span class="material-icons-round text-blue-500 text-base mr-2">
+                          sync
+                        </span>
+                        Atualizar Migração
+                      }
+                    </button>
                     @if (t.active) {
                       <button mat-menu-item (click)="deactivate(t)">
                         <span class="material-icons-round text-amber-500 text-base mr-2">block</span>
@@ -295,6 +308,7 @@ export class TenantsPageComponent implements OnInit {
   saving   = signal(false);
   tenants  = signal<Tenant[]>([]);
   showForm = signal(false);
+  migratingTenantId  = signal<number | null>(null)
 
   columns = ['tenant', 'version', 'status', 'createdAt', 'actions'];
 
@@ -367,6 +381,28 @@ export class TenantsPageComponent implements OnInit {
       error: (e: any) => {
         this.toast.error(e?.error?.message ?? 'Erro ao entrar no tenant.');
       },
+    });
+  }
+
+  migrateTenant(t: Tenant) {
+    if (this.migratingTenantId() !== null) {
+      return;
+    }
+
+    this.migratingTenantId.set(t.id);
+
+    this.tenantService.migrate(t.id).subscribe({
+      next: () => {
+        this.toast.success(`Tenant "${t.name}" atualizado com sucesso!`);
+        this.migratingTenantId.set(null);
+        this.load();
+      },
+      error: (e: any) => {
+        this.toast.error(
+          e?.error?.message ?? 'Erro ao atualizar migration do tenant.'
+        );
+        this.migratingTenantId.set(null);
+      }
     });
   }
 }

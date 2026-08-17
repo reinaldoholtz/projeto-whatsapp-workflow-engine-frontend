@@ -15,4 +15,5 @@ export class TenantService {
   deactivate(id: number)           { return this.http.patch<void>(`${this.base}/${id}/deactivate`, {}); }
   enter(id: number)                { return this.http.post<AuthResponse>(`${this.base}/${id}/enter`, {}); }
   backToAdmin()                    { return this.http.post<AuthResponse>(`${this.base}/back-to-admin`, {}); }
+  migrate(id: number)              { return this.http.post<Tenant>(`${this.base}/${id}/migrate`, {}); }
 }
