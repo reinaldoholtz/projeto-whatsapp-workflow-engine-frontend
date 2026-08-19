@@ -29,7 +29,7 @@ import { ThemeService } from '@core/services/theme.service';
             <span class="material-icons-round text-white text-3xl">chat</span>
           </div>
           <h1 class="text-2xl font-bold text-white">CRM WhatsApp</h1>
-          <p class="text-slate-400 text-sm mt-1">Gestão de WhatsApp — Imóveis</p>
+          <p class="text-slate-400 text-sm mt-1">Gestão de WhatsApp</p>
         </div>
 
         <!-- Card -->

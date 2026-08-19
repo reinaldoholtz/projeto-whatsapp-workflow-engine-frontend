@@ -53,4 +53,10 @@ export class AttendanceMenuService {
   reorderOptions(menuId: number, optionIds: number[]) {
     return this.http.put<AttendanceMenu>(`${this.base}/${menuId}/options/reorder`, { optionIds });
   }
+
+  // Fetch active queues for the current tenant (used by menu option UI)
+  getQueues() {
+    return this.http.get<{ id: number; tenantId: number; name: string; groupId: number | null }[]>(`/api/attendance/queues`);
+  }
 }
+

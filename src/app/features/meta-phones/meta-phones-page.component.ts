@@ -269,9 +269,18 @@ import { forkJoin } from 'rxjs';
               }
             </div>
 
+            <!-- Provider -->
+            <div>
+              <label class="form-label">Provider *</label>
+              <select formControlName="provider" class="form-input">
+                <option value="meta">Meta Cloud API</option>
+                <option value="evolution">Evolution</option>
+              </select>
+            </div>
+
             <!-- Phone Number ID -->
             <div>
-              <label class="form-label">Phone Number ID (Meta) *</label>
+              <label class="form-label">Phone Number ID *</label>
               <input formControlName="phoneNumberId" placeholder="Ex: 123456789012345"
                 class="form-input font-mono text-sm" />
               <p class="text-xs text-gray-400 mt-1">
@@ -388,6 +397,7 @@ export class MetaPhonesPageComponent implements OnInit {
     tenantId:           [null as number | null],
     name:               ['', Validators.required],
     displayPhoneNumber: ['', Validators.required],
+    provider:           ['meta', Validators.required],
     phoneNumberId:      ['', Validators.required],
     businessAccountId:  [''],
     accessToken:        [''],
@@ -435,6 +445,7 @@ export class MetaPhonesPageComponent implements OnInit {
       tenantId:           phone?.tenantId  ?? null,
       name:               phone?.name      ?? '',
       displayPhoneNumber: phone?.displayPhoneNumber ?? '',
+      provider:           phone?.provider ?? 'meta',
       phoneNumberId:      phone?.phoneNumberId ?? '',
       businessAccountId:  phone?.businessAccountId ?? '',
       accessToken:        '',  // nunca pre-preenche — token não é retornado pelo backend
@@ -448,6 +459,17 @@ export class MetaPhonesPageComponent implements OnInit {
       tidCtrl.clearValidators();
     }
     tidCtrl.updateValueAndValidity();
+
+    // provider selecionável apenas ao criar — ao editar não permitir alterar provider
+    const providerCtrl = this.form.get('provider')!;
+    if (!phone) {
+      providerCtrl.setValidators(Validators.required);
+      providerCtrl.enable();
+    } else {
+      providerCtrl.clearValidators();
+      providerCtrl.disable();
+    }
+    providerCtrl.updateValueAndValidity();
 
     this.showForm.set(true);
   }
@@ -463,27 +485,29 @@ export class MetaPhonesPageComponent implements OnInit {
       const req: UpdateMetaPhoneRequest = {
         name:               v.name               || undefined,
         displayPhoneNumber: v.displayPhoneNumber  || undefined,
-        phoneNumberId:      v.phoneNumberId       || undefined,
-        businessAccountId:  v.businessAccountId   || undefined,
-        accessToken:        v.accessToken         || undefined,
-      };
-      this.metaPhoneService.update(this.editing()!.id, req).subscribe({
-        next: () => { this.toast.success('Número atualizado!'); this.closeForm(); this.saving.set(false); this.load(); },
-        error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao atualizar.'); this.saving.set(false); },
-      });
+      provider:           v.provider           || undefined,
+      phoneNumberId:      v.phoneNumberId       || undefined,
+      businessAccountId:  v.businessAccountId   || undefined,
+      accessToken:        v.accessToken         || undefined,
+    };
+    this.metaPhoneService.update(this.editing()!.id, req).subscribe({
+      next: () => { this.toast.success('Número atualizado!'); this.closeForm(); this.saving.set(false); this.load(); },
+      error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao atualizar.'); this.saving.set(false); },
+    });
     } else {
-      const req: CreateMetaPhoneRequest = {
-        tenantId:           v.tenantId            ?? undefined,
-        name:               v.name!,
-        displayPhoneNumber: v.displayPhoneNumber!,
-        phoneNumberId:      v.phoneNumberId!,
-        businessAccountId:  v.businessAccountId   || undefined,
-        accessToken:        v.accessToken          || undefined,
-      };
-      this.metaPhoneService.create(req).subscribe({
-        next: () => { this.toast.success('Número criado!'); this.closeForm(); this.saving.set(false); this.load(); },
-        error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao criar.'); this.saving.set(false); },
-      });
+    const req: CreateMetaPhoneRequest = {
+      tenantId:           v.tenantId            ?? undefined,
+      name:               v.name!,
+      displayPhoneNumber: v.displayPhoneNumber!,
+      provider:           v.provider || 'meta',
+      phoneNumberId:      v.phoneNumberId!,
+      businessAccountId:  v.businessAccountId   || undefined,
+      accessToken:        v.accessToken          || undefined,
+    };
+    this.metaPhoneService.create(req).subscribe({
+      next: () => { this.toast.success('Número criado!'); this.closeForm(); this.saving.set(false); this.load(); },
+      error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao criar.'); this.saving.set(false); },
+    });
     }
   }
 

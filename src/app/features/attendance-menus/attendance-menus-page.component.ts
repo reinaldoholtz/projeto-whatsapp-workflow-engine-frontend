@@ -283,13 +283,16 @@ import {
 
               @if (optionForm.get('actionType')?.value === 'QUEUE') {
                 <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Fila Alvo (Queue ID)</label>
-                  <input
-                    type="number"
+                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Fila Alvo</label>
+                  <select
                     formControlName="queueId"
                     class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg text-xs"
-                    placeholder="ID da fila de atendimento"
-                  />
+                  >
+                    <option [value]="null">Selecione uma fila...</option>
+                    @for (q of queues(); track q.id) {
+                      <option [value]="q.id">{{ q.name }} (ID: {{ q.id }})</option>
+                    }
+                  </select>
                 </div>
               }
 
@@ -409,6 +412,7 @@ export class AttendanceMenusPageComponent implements OnInit {
 
   menus = signal<AttendanceMenu[]>([]);
   channelAccounts = signal<ChannelAccount[]>([]);
+  queues = signal<{ id: number; tenantId: number; name: string; groupId: number | null }[]>([]);
 
   showMenuModal = signal(false);
   selectedMenu = signal<AttendanceMenu | null>(null);
@@ -438,6 +442,7 @@ export class AttendanceMenusPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadMenus();
     this.loadChannelAccounts();
+    this.loadQueues();
   }
 
   loadMenus(): void {
@@ -451,6 +456,13 @@ export class AttendanceMenusPageComponent implements OnInit {
     this.channelAccountService.getAllActive().subscribe({
       next: (res: ChannelAccount[]) => this.channelAccounts.set(res),
       error: () => this.toast.error('Erro ao carregar contas de canais'),
+    });
+  }
+
+  loadQueues(): void {
+    this.menuService.getQueues().subscribe({
+      next: (res) => this.queues.set(res),
+      error: () => this.toast.error('Erro ao carregar filas (queues)'),
     });
   }
 
@@ -522,11 +534,19 @@ export class AttendanceMenusPageComponent implements OnInit {
   openAddOptionModal(): void {
     this.editingOption.set(null);
     this.optionForm.reset({ actionType: 'QUEUE', enabled: true, label: '' });
+    // ensure queues are loaded before showing modal
+    if (this.queues().length === 0) {
+      this.loadQueues();
+    }
     this.showOptionModal.set(true);
   }
 
   openEditOptionModal(option: MenuOption): void {
     this.editingOption.set(option);
+    // ensure queues are loaded so select shows correct value
+    if (this.queues().length === 0) {
+      this.loadQueues();
+    }
     this.optionForm.patchValue({
       label: option.label,
       actionType: option.actionType,

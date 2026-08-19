@@ -225,6 +225,7 @@ export interface LeadDetail {
 // Attendance
 export type ConversationStatus =
   | 'NEW'
+  | 'PENDING'
   | 'UNREAD'
   | 'IN_PROGRESS'
   | 'WAITING_CUSTOMER'
@@ -265,6 +266,7 @@ export interface AttendanceConversation {
   lastInteractionAt: string | null;
   assignedGroupId: number | null;
   assignedOperatorId: number | null;
+  queueId?: number | null;
   priority: ConversationPriority;
 }
 
