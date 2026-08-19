@@ -9,7 +9,7 @@ import { MetaPhoneService } from '@core/services/meta-phone.service';
 import { WhatsAppTemplateService } from '@core/services/whatsapp-template.service';
 import { UserService } from '@core/services/user.service';
 import { ToastService } from '@core/services/toast.service';
-import { MetaPhone, User, WhatsAppTemplate, Workflow } from '@shared/models';
+import { ChannelAccount, User, WhatsAppTemplate, Workflow } from '@shared/models';
 
 @Component({
   selector: 'app-workflow-list-page',
@@ -174,7 +174,7 @@ import { MetaPhone, User, WhatsAppTemplate, Workflow } from '@shared/models';
                   <option [ngValue]="null">- Selecione um número -</option>
                   @for (p of selectablePhones(); track p.id) {
                     <option [ngValue]="p.id" [disabled]="isPhoneTakenByOther(p.id)">
-                      {{ p.name }} - {{ p.displayPhoneNumber }} @if (isPhoneTakenByOther(p.id)) { (já em uso) }
+                      {{ p.accountName }} - {{ p.displayPhoneNumber }} @if (isPhoneTakenByOther(p.id)) { (já em uso) }
                     </option>
                   }
                 </select>
@@ -273,7 +273,7 @@ export class WorkflowListPageComponent implements OnInit {
   saving = signal(false);
   deleting = signal(false);
   workflows = signal<Workflow[]>([]);
-  activePhones = signal<MetaPhone[]>([]);
+  activePhones = signal<ChannelAccount[]>([]);
   activeTemplates = signal<WhatsAppTemplate[]>([]);
   users = signal<User[]>([]);
   showForm = signal(false);
@@ -311,7 +311,7 @@ export class WorkflowListPageComponent implements OnInit {
     });
   }
 
-  selectablePhones(): MetaPhone[] {
+  selectablePhones(): ChannelAccount[] {
     const phones = this.activePhones();
     const current = this.editing()?.metaPhoneId;
     if (current && !phones.some(p => p.id === current)) {
@@ -327,9 +327,7 @@ export class WorkflowListPageComponent implements OnInit {
             provider: 'meta',
             accountName: fromWorkflow.metaPhoneName,
             externalAccountId: fromWorkflow.metaPhoneDisplay ?? '',
-            name: fromWorkflow.metaPhoneName,
             displayPhoneNumber: fromWorkflow.metaPhoneDisplay ?? '',
-            phoneNumberId: '',
             businessAccountId: null,
             active: false,
             createdAt: '',

@@ -412,7 +412,7 @@ export class AttendanceMenusPageComponent implements OnInit {
 
   menus = signal<AttendanceMenu[]>([]);
   channelAccounts = signal<ChannelAccount[]>([]);
-  queues = signal<{ id: number; tenantId: number; name: string; groupId: number | null }[]>([]);
+  queues = signal<{ id: number; name: string; groupId: number | null }[]>([]);
 
   showMenuModal = signal(false);
   selectedMenu = signal<AttendanceMenu | null>(null);
@@ -460,9 +460,19 @@ export class AttendanceMenusPageComponent implements OnInit {
   }
 
   loadQueues(): void {
+    console.log('[AttendanceMenus] loadQueues() chamado');
+
     this.menuService.getQueues().subscribe({
-      next: (res) => this.queues.set(res),
-      error: () => this.toast.error('Erro ao carregar filas (queues)'),
+      next: (res) => {
+        console.log('[AttendanceMenus] Queues recebidas:', res);
+        console.log('[AttendanceMenus] Quantidade de queues:', res.length);
+
+        this.queues.set(res);
+      },
+      error: (error) => {
+        console.error('[AttendanceMenus] Erro ao carregar queues:', error);
+        this.toast.error('Erro ao carregar filas (queues)');
+      },
     });
   }
 

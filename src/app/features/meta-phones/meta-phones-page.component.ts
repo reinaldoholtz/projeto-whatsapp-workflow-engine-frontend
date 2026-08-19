@@ -7,7 +7,7 @@ import { MetaPhoneService } from '@core/services/meta-phone.service';
 import { TenantService } from '@core/services/tenant.service';
 import { ToastService } from '@core/services/toast.service';
 import { AuthService } from '@core/auth/auth.service';
-import { MetaPhone, CreateMetaPhoneRequest, UpdateMetaPhoneRequest, Tenant } from '@shared/models';
+import { ChannelAccount, CreateChannelAccountRequest, UpdateChannelAccountRequest, Tenant } from '@shared/models';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 import { forkJoin } from 'rxjs';
 
@@ -73,23 +73,23 @@ import { forkJoin } from 'rxjs';
                       <span class="material-icons-round text-emerald-600 text-xl">perm_phone_msg</span>
                     </div>
                     <div>
-                      <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ p.name }}</p>
+                      <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ p.accountName }}</p>
                       <p class="text-xs text-gray-400">{{ p.displayPhoneNumber }}</p>
                     </div>
                   </div>
                 </td>
               </ng-container>
 
-              <!-- Phone Number ID -->
-              <ng-container matColumnDef="phoneNumberId">
+              <!-- External Account ID -->
+              <ng-container matColumnDef="externalAccountId">
                 <th mat-header-cell *matHeaderCellDef
                   class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  Phone Number ID
+                  External Account ID
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
                   <span class="font-mono text-xs bg-gray-100 dark:bg-slate-700
                                text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
-                    {{ p.phoneNumberId }}
+                    {{ p.externalAccountId }}
                   </span>
                 </td>
               </ng-container>
@@ -114,7 +114,7 @@ import { forkJoin } from 'rxjs';
                   Token
                 </th>
                 <td mat-cell *matCellDef="let p" class="px-4 py-3">
-                  @if (p.hasToken) {
+                  @if (p.credentialsPresent) {
                     <span class="badge badge-active">
                       <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Configurado
                     </span>
@@ -249,12 +249,12 @@ import { forkJoin } from 'rxjs';
               </div>
             }
 
-            <!-- Nome amigável -->
+            <!-- Nome amigável (accountName) -->
             <div>
               <label class="form-label">Nome amigável *</label>
-              <input formControlName="name" placeholder="Ex: Vendas, Aluguel, Financiamento"
+              <input formControlName="accountName" placeholder="Ex: Vendas, Aluguel, Financiamento"
                 class="form-input" />
-              @if (form.get('name')?.invalid && form.get('name')?.touched) {
+              @if (form.get('accountName')?.invalid && form.get('accountName')?.touched) {
                 <p class="text-red-500 text-xs mt-1">Nome é obrigatório</p>
               }
             </div>
@@ -278,16 +278,16 @@ import { forkJoin } from 'rxjs';
               </select>
             </div>
 
-            <!-- Phone Number ID -->
+            <!-- External Account ID (externalAccountId) -->
             <div>
-              <label class="form-label">Phone Number ID *</label>
-              <input formControlName="phoneNumberId" placeholder="Ex: 123456789012345"
+              <label class="form-label">External Account ID *</label>
+              <input formControlName="externalAccountId" placeholder="Ex: 123456789012345"
                 class="form-input font-mono text-sm" />
               <p class="text-xs text-gray-400 mt-1">
                 Disponível em Meta for Developers → WhatsApp → API Setup
               </p>
-              @if (form.get('phoneNumberId')?.invalid && form.get('phoneNumberId')?.touched) {
-                <p class="text-red-500 text-xs mt-1">Phone Number ID é obrigatório</p>
+              @if (form.get('externalAccountId')?.invalid && form.get('externalAccountId')?.touched) {
+                <p class="text-red-500 text-xs mt-1">External Account ID é obrigatório</p>
               }
             </div>
 
@@ -340,7 +340,7 @@ import { forkJoin } from 'rxjs';
           </div>
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Excluir número?</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            <strong class="text-gray-800 dark:text-gray-200">{{ phoneToDelete()!.name }}</strong>
+            <strong class="text-gray-800 dark:text-gray-200">{{ phoneToDelete()!.accountName }}</strong>
             ({{ phoneToDelete()!.displayPhoneNumber }})
           </p>
           <p class="text-xs text-amber-600 dark:text-amber-400 mb-6">
@@ -379,26 +379,26 @@ export class MetaPhonesPageComponent implements OnInit {
 
   loading       = signal(true);
   saving        = signal(false);
-  phones        = signal<MetaPhone[]>([]);
+  phones        = signal<ChannelAccount[]>([]);
   tenants       = signal<Tenant[]>([]);
   showForm      = signal(false);
-  editing       = signal<MetaPhone | null>(null);
-  phoneToDelete = signal<MetaPhone | null>(null);
+  editing       = signal<ChannelAccount | null>(null);
+  phoneToDelete = signal<ChannelAccount | null>(null);
 
   /** Colunas visíveis — MASTER vê tenant, ADMIN não */
   visibleColumns = computed(() => {
-    const base = ['phone', 'phoneNumberId', 'token', 'active', 'actions'];
+    const base = ['phone', 'externalAccountId', 'token', 'active', 'actions'];
     return this.auth.isMasterAdminMode()
-      ? ['phone', 'phoneNumberId', 'tenant', 'token', 'active', 'actions']
+      ? ['phone', 'externalAccountId', 'tenant', 'token', 'active', 'actions']
       : base;
   });
 
   form = this.fb.group({
     tenantId:           [null as number | null],
-    name:               ['', Validators.required],
+    accountName:        ['', Validators.required],
     displayPhoneNumber: ['', Validators.required],
     provider:           ['meta', Validators.required],
-    phoneNumberId:      ['', Validators.required],
+    externalAccountId:  ['', Validators.required],
     businessAccountId:  [''],
     accessToken:        [''],
   });
@@ -439,14 +439,14 @@ export class MetaPhonesPageComponent implements OnInit {
     }
   }
 
-  openForm(phone?: MetaPhone) {
+  openForm(phone?: ChannelAccount) {
     this.editing.set(phone ?? null);
     this.form.reset({
       tenantId:           phone?.tenantId  ?? null,
-      name:               phone?.name      ?? '',
+      accountName:        phone?.accountName ?? '',
       displayPhoneNumber: phone?.displayPhoneNumber ?? '',
       provider:           phone?.provider ?? 'meta',
-      phoneNumberId:      phone?.phoneNumberId ?? '',
+      externalAccountId:  phone?.externalAccountId ?? '',
       businessAccountId:  phone?.businessAccountId ?? '',
       accessToken:        '',  // nunca pre-preenche — token não é retornado pelo backend
     });
@@ -482,43 +482,52 @@ export class MetaPhonesPageComponent implements OnInit {
     const v = this.form.value;
 
     if (this.editing()) {
-      const req: UpdateMetaPhoneRequest = {
-        name:               v.name               || undefined,
-        displayPhoneNumber: v.displayPhoneNumber  || undefined,
-      provider:           v.provider           || undefined,
-      phoneNumberId:      v.phoneNumberId       || undefined,
-      businessAccountId:  v.businessAccountId   || undefined,
-      accessToken:        v.accessToken         || undefined,
-    };
-    this.metaPhoneService.update(this.editing()!.id, req).subscribe({
-      next: () => { this.toast.success('Número atualizado!'); this.closeForm(); this.saving.set(false); this.load(); },
-      error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao atualizar.'); this.saving.set(false); },
-    });
+      const updateReq: UpdateChannelAccountRequest = {
+        accountName: v.accountName || undefined,
+        externalAccountId: v.externalAccountId || undefined,
+        provider: v.provider || undefined, // provider disabled on edit in UI, but keep if present
+        configuration: (v.displayPhoneNumber || v.businessAccountId) ? {
+          displayPhoneNumber: v.displayPhoneNumber || undefined,
+          businessAccountId: v.businessAccountId || undefined
+        } : undefined,
+        credentials: v.accessToken ? { accessToken: v.accessToken } : undefined,
+        active: undefined
+      };
+
+      this.metaPhoneService.update(this.editing()!.id, updateReq).subscribe({
+        next: () => { this.toast.success('Número atualizado!'); this.closeForm(); this.saving.set(false); this.load(); },
+        error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao atualizar.'); this.saving.set(false); },
+      });
     } else {
-    const req: CreateMetaPhoneRequest = {
-      tenantId:           v.tenantId            ?? undefined,
-      name:               v.name!,
-      displayPhoneNumber: v.displayPhoneNumber!,
-      provider:           v.provider || 'meta',
-      phoneNumberId:      v.phoneNumberId!,
-      businessAccountId:  v.businessAccountId   || undefined,
-      accessToken:        v.accessToken          || undefined,
-    };
-    this.metaPhoneService.create(req).subscribe({
-      next: () => { this.toast.success('Número criado!'); this.closeForm(); this.saving.set(false); this.load(); },
-      error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao criar.'); this.saving.set(false); },
-    });
+      const createReq: CreateChannelAccountRequest = {
+        tenantId: v.tenantId ?? undefined,
+        channel: 'WHATSAPP',
+        provider: v.provider || 'meta',
+        accountName: v.accountName!,
+        externalAccountId: v.externalAccountId!,
+        credentials: v.accessToken ? { accessToken: v.accessToken } : undefined,
+        configuration: (v.displayPhoneNumber || v.businessAccountId) ? {
+          displayPhoneNumber: v.displayPhoneNumber || undefined,
+          businessAccountId: v.businessAccountId || undefined
+        } : undefined,
+        active: true
+      };
+
+      this.metaPhoneService.create(createReq).subscribe({
+        next: () => { this.toast.success('Número criado!'); this.closeForm(); this.saving.set(false); this.load(); },
+        error: (e: any) => { this.toast.error(e?.error?.message ?? 'Erro ao criar.'); this.saving.set(false); },
+      });
     }
   }
 
-  toggleActive(phone: MetaPhone) {
+  toggleActive(phone: ChannelAccount) {
     this.metaPhoneService.toggleActive(phone.id).subscribe({
       next: p => { this.toast.success(`${p.active ? 'Ativado' : 'Desativado'}!`); this.load(); },
       error: (e: any) => this.toast.error(e?.error?.message ?? 'Erro ao alterar status.'),
     });
   }
 
-  confirmDelete(phone: MetaPhone) { this.phoneToDelete.set(phone); }
+  confirmDelete(phone: ChannelAccount) { this.phoneToDelete.set(phone); }
 
   deletePhone() {
     if (!this.phoneToDelete()) return;

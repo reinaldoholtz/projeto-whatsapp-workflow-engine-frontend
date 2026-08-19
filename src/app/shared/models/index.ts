@@ -82,67 +82,72 @@ export interface CreateTenantRequest {
   databaseName: string;
 }
 
-// ── MetaPhone ─────────────────────────────────────────────────────────────
-/**
- * Reflete MetaPhoneSummaryResponse / MetaPhoneDetailResponse do backend.
- * MetaPhone agora vive exclusivamente no admin_db.
- * accessToken NÃO é retornado pelo backend (segurança) — apenas indicado via hasToken.
- */
+// ── ChannelAccount (substitui o antigo MetaPhone) ─────────────────────────
 export type ChannelType = 'WHATSAPP' | 'INSTAGRAM' | 'MESSENGER' | 'TELEGRAM';
 
+/**
+ * Response model returned by the backend for channel accounts.
+ * Important: credentials (accessToken) is NEVER returned. Instead the backend
+ * returns boolean flags credentialsPresent/configurationPresent. The frontend
+ * MUST NOT expect access tokens in responses.
+ */
 export interface ChannelAccount {
   id: number;
-  tenantId: number;
-  tenantName: string;
+  tenantId?: number | null;
+  tenantName?: string | null;
   channel: ChannelType;
   provider: string;
   accountName: string;
   externalAccountId: string;
-  credentials?: string | null;
-  configuration?: string | null;
+  // backend exposes presence flags instead of raw secrets
+  credentialsPresent?: boolean;
+  configurationPresent?: boolean;
   active: boolean;
   createdAt: string;
-  updatedAt?: string;
-  name?: string;
-  displayPhoneNumber?: string;
-  phoneNumberId?: string;
+  updatedAt?: string | null;
+  // Optional convenience fields derived from configuration (may be null)
+  displayPhoneNumber?: string | null;
   businessAccountId?: string | null;
 }
 
+/**
+ * Create payload sent by the frontend. Must match the ChannelAccount contract.
+ * Note: tenant is sent as tenantId (keeps compatibility with backend DTO naming).
+ */
 export interface CreateChannelAccountRequest {
   tenantId?: number;
-  channel?: ChannelType;
-  provider?: string;
-  accountName?: string;
-  externalAccountId?: string;
-  credentials?: string;
-  configuration?: string;
-  name?: string;
-  displayPhoneNumber?: string;
-  phoneNumberId?: string;
-  businessAccountId?: string;
-  accessToken?: string;
+  channel: ChannelType;
+  provider: string; // e.g. 'meta' or 'evolution'
+  accountName: string;
+  externalAccountId: string;
+  credentials?: {
+    accessToken?: string;
+  };
+  configuration?: {
+    displayPhoneNumber?: string;
+    businessAccountId?: string;
+  };
+  active?: boolean;
 }
 
+/**
+ * Update payload. Send only fields that should be changed. Do NOT include
+ * credentials.accessToken unless replacing the token.
+ */
 export interface UpdateChannelAccountRequest {
   accountName?: string;
   channel?: ChannelType;
-  provider?: string;
+  provider?: string; // should generally not be changed in the UI
   externalAccountId?: string;
-  credentials?: string;
-  configuration?: string;
+  credentials?: { accessToken?: string } | null;
+  configuration?: { displayPhoneNumber?: string; businessAccountId?: string } | null;
   active?: boolean;
   tenantId?: number;
-  name?: string;
-  displayPhoneNumber?: string;
-  phoneNumberId?: string;
-  businessAccountId?: string;
-  accessToken?: string;
 }
 
-export type MetaPhone = ChannelAccount;
-export type CreateMetaPhoneRequest = CreateChannelAccountRequest;
-export type UpdateMetaPhoneRequest = UpdateChannelAccountRequest;
+// Remove legacy MetaPhone type aliases — use ChannelAccount and the requests above
+// throughout the frontend codebase.
+
 
 // Templates WhatsApp
 export type WhatsAppTemplateCategory = 'MARKETING' | 'UTILITY' | 'AUTHENTICATION';
@@ -552,6 +557,12 @@ export interface AttendanceMenu {
   options: MenuOption[];
   createdAt: string;
   updatedAt: string;
+}
+
+export interface QueueSummary {
+  id: number;
+  name: string;
+  groupId: number | null;
 }
 
 export interface CreateMenuOptionRequest {
