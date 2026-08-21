@@ -38,6 +38,18 @@ export const routes: Routes = [
         title: 'Menus de Atendimento - CRM WhatsApp',
       },
       {
+        path: 'attendance-groups',
+        canActivate: [adminGuard, tenantContextGuard],
+        loadComponent: () => import('./features/attendance-groups/attendance-groups-page.component').then(m => m.AttendanceGroupsPageComponent),
+        title: 'Grupos de Atendimento - CRM WhatsApp',
+      },
+      {
+        path: 'attendance-queues',
+        canActivate: [adminGuard, tenantContextGuard],
+        loadComponent: () => import('./features/attendance-queues/attendance-queues-page.component').then(m => m.AttendanceQueuesPageComponent),
+        title: 'Filas de Atendimento - CRM WhatsApp',
+      },
+      {
         path: 'dashboard',
         canActivate: [tenantContextGuard],
         loadComponent: () =>

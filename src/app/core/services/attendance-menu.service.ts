@@ -7,7 +7,7 @@ import {
   CreateAttendanceMenuRequest,
   UpdateAttendanceMenuRequest,
   CreateMenuOptionRequest,
-  QueueSummary,
+  AttendanceQueue,
 } from '@shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -56,9 +56,8 @@ export class AttendanceMenuService {
   }
 
   getQueues() {
-    return this.http.get<QueueSummary[]>(
-      `${environment.apiUrl}/attendance/queues`
+    return this.http.get<AttendanceQueue[]>(
+      `${environment.apiUrl}/attendance/queues?activeOnly=true`
     );
   }
 }
-

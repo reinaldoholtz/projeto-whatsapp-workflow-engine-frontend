@@ -445,7 +445,7 @@ export class AttendancePageComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
-    this.ws.connect();
+    // this.ws.connect();
   }
 
   refresh(): void {
@@ -588,7 +588,7 @@ export class AttendancePageComponent implements OnInit {
   private loadData(showToast = false): void {
     this.loading.set(true);
 
-    this.attendanceService.getGroups().subscribe({
+    this.attendanceService.getGroups().subscribe({      
       next: groups => this.groups.set(groups),
       error: () => this.toast.error('Erro ao carregar grupos de atendimento.'),
     });
