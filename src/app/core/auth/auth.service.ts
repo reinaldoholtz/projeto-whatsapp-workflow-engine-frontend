@@ -95,6 +95,7 @@ export class AuthService {
   applyAuthResponse(res: AuthResponse): void {
     this.saveTokens(res);
     this._user.set({
+      name:         res.name,
       email:        res.email,
       role:         res.role as AuthUser['role'],
       tenantId:     res.tenantId ?? null,
@@ -110,6 +111,7 @@ export class AuthService {
     localStorage.setItem(ACCESS_TOKEN_KEY, res.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, res.refreshToken);
     const user: AuthUser = {
+      name:         res.name,
       email:        res.email,
       role:         res.role as AuthUser['role'],
       tenantId:     res.tenantId ?? null,

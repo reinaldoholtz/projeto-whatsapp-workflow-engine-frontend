@@ -5,6 +5,7 @@ import { AttendanceService, SendMessageRequest } from '@core/services/attendance
 import { ToastService } from '@core/services/toast.service';
 import { WebSocketService } from '@core/services/websocket.service';
 import { AttendanceConversationMessage } from '@shared/models';
+import { AuthService } from '@core/auth/auth.service';
 
 export type MessageDeliveryStatus = 'PENDING' | 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
 
@@ -163,6 +164,7 @@ export class ConversationComposerComponent implements OnDestroy {
   private ws = inject(WebSocketService);
   private fb = inject(FormBuilder);
   private destroy$ = new Subject<void>();
+  private authService = inject(AuthService);
 
   sending = signal(false);
   showEmojiPicker = signal(false);
@@ -202,7 +204,15 @@ export class ConversationComposerComponent implements OnDestroy {
     this.sending.set(true);
     this.stopTyping();
 
-    const payload: SendMessageRequest = { text };
+    const operatorName = this.getOperatorName();
+
+    const outboundText = text
+      ? `*${operatorName}*\n${text}`
+      : text;
+
+    const payload: SendMessageRequest = {
+      text: outboundText
+    };    
 
     if (hasMedia) {
       this.sendMediaMessage(payload);
@@ -372,4 +382,12 @@ export class ConversationComposerComponent implements OnDestroy {
   openTemplatesModal(): void {
     this.toast.info('Seleção de templates em desenvolvimento.');
   }
+
+  private getOperatorName(): string {
+    const user = this.authService.user();
+    console.log('Operator name:', user?.name);
+
+    return user?.name || user?.email || 'Operador';
+  }
+  
 }

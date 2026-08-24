@@ -7,6 +7,7 @@ export interface AuthResponse {
   tokenType: string;
   expiresIn: number;
   email: string;
+  name?: string;
   role: string;
   tenantId?: number | null;
   databaseName?: string | null;
