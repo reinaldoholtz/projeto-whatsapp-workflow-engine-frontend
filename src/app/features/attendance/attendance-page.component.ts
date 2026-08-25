@@ -658,9 +658,9 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
 
   private handleNewConversation(notification: NewConversationNotification): void {
 
-    this.toast.info(
-      `Nova mensagem de ${notification.contactName}`
-    );
+    // this.toast.info(
+    //   `Nova mensagem de ${notification.contactName}`
+    // );
 
     this.loadData(false);
 
