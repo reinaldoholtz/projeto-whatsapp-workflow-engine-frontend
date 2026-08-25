@@ -1,18 +1,18 @@
 ﻿import { DatePipe, NgClass } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AttendanceService } from '@core/services/attendance.service';
 import { ToastService } from '@core/services/toast.service';
-import { WebSocketService } from '@core/services/websocket.service';
+import { NewConversationNotification, WebSocketService } from '@core/services/websocket.service';
 import { SkeletonComponent } from '@shared/components/skeleton/skeleton.component';
 import {
   AttendanceConversation,
   AttendanceConversationDetail,
   AttendanceConversationMessage,
-  AttendanceConversationNote,
   AttendanceGroup,
 } from '@shared/models';
 import { ConversationComposerComponent, ConversationMessage } from './components/conversation-composer.component';
+import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-attendance-page',
@@ -392,11 +392,12 @@ import { ConversationComposerComponent, ConversationMessage } from './components
     }
   `]
 })
-export class AttendancePageComponent implements OnInit {
+export class AttendancePageComponent implements OnInit, OnDestroy {
   private attendanceService = inject(AttendanceService);
   private toast = inject(ToastService);
   private ws = inject(WebSocketService);
   private fb = inject(FormBuilder);
+  private readonly destroy$ = new Subject<void>();
 
   loading = signal(true);
   loadingDetail = signal(false);
@@ -444,21 +445,33 @@ export class AttendancePageComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.ws.connect();
+
+    this.ws.onNewConversation()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(notification => {
+        this.handleNewConversation(notification);
+      });
+
     this.loadData();
-    // this.ws.connect();
   }
 
   refresh(): void {
     this.loadData(true);
   }
 
-  selectConversation(id: number): void {
-    if (this.selectedConversationId() === id && this.selectedConversation()) {
+  selectConversation(id: number, forceReload = false): void {
+    if (
+      !forceReload &&
+      this.selectedConversationId() === id &&
+      this.selectedConversation()
+    ) {
       return;
     }
 
     this.selectedConversationId.set(id);
     this.loadingDetail.set(true);
+
     this.attendanceService.getConversation(id).subscribe({
       next: detail => {
         this.selectedConversation.set(detail);
@@ -585,12 +598,34 @@ export class AttendancePageComponent implements OnInit {
     return map[status] ?? 'text-gray-400';
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   private loadData(showToast = false): void {
     this.loading.set(true);
 
-    this.attendanceService.getGroups().subscribe({      
-      next: groups => this.groups.set(groups),
-      error: () => this.toast.error('Erro ao carregar grupos de atendimento.'),
+    this.attendanceService.getGroups().subscribe({
+      next: groups => {
+
+        this.groups.set(groups);
+
+        groups.forEach(group => {
+
+          this.ws.subscribeToAttendanceGroup(
+            group.tenantId,
+            group.id
+          );
+
+        });
+      },
+
+      error: () => {
+        this.toast.error(
+          'Erro ao carregar grupos de atendimento.'
+        );
+      }
     });
 
     this.attendanceService.getConversations().subscribe({
@@ -619,5 +654,18 @@ export class AttendancePageComponent implements OnInit {
         this.toast.error('Erro ao carregar conversas de atendimento.');
       },
     });
+  }
+
+  private handleNewConversation(notification: NewConversationNotification): void {
+
+    this.toast.info(
+      `Nova mensagem de ${notification.contactName}`
+    );
+
+    this.loadData(false);
+
+    if (this.selectedConversationId() === notification.conversationId) {
+      this.selectConversation(notification.conversationId, true);
+    }
   }
 }

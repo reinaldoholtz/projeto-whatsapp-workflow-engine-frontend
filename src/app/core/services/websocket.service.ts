@@ -1,5 +1,6 @@
 ﻿import { Injectable, OnDestroy, inject } from '@angular/core';
 import { Subject, Observable, filter, map } from 'rxjs';
+import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
 import { environment } from '@env/environment';
 import { AuthService } from '@core/auth/auth.service';
 
@@ -10,105 +11,240 @@ export interface WebSocketMessage {
   timestamp?: string;
 }
 
+export interface NewConversationNotification {
+  conversationId: number;
+  tenantId: number;
+  attendanceGroupId: number;
+  contactName: string;
+  phoneNumber: string;
+  messagePreview: string;
+  status: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class WebSocketService implements OnDestroy {
+
   private authService = inject(AuthService);
-  private ws: WebSocket | null = null;
+
+  private client: Client | null = null;
+
   private messages$ = new Subject<WebSocketMessage>();
+
+  private subscriptions = new Map<string, StompSubscription>();
+
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 10;
-  private reconnectTimeout: any = null;
 
   connect(): void {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (this.client?.active) {
       return;
     }
 
     const token = this.authService.getAccessToken();
+
     if (!token) {
+      console.warn('[WebSocket] No access token available');
       return;
     }
 
-    const wsUrl = environment.wsUrl || environment.apiUrl.replace('http', 'ws');
-    this.ws = new WebSocket(`${wsUrl}/ws?token=${token}`);
+    const wsUrl =
+      environment.wsUrl ||
+      environment.apiUrl.replace(/^http/, 'ws');
 
-    this.ws.onopen = () => {
-      this.reconnectAttempts = 0;
-      console.log('[WebSocket] Connected');
-    };
+    this.client = new Client({
+      brokerURL: environment.wsUrl,
 
-    this.ws.onmessage = (event: MessageEvent) => {
-      try {
-        const message: WebSocketMessage = JSON.parse(event.data);
-        this.messages$.next(message);
-      } catch (e) {
-        console.error('[WebSocket] Failed to parse message:', e);
+      connectHeaders: {
+        Authorization: `Bearer ${token}`
+      },
+
+      reconnectDelay: 5000,
+      
+      onConnect: () => {     
+        this.reconnectAttempts = 0;
+        this.resubscribe();
+      },
+
+      onStompError: (frame) => {
+        console.error(
+          '[WebSocket] STOMP error:',
+          frame.headers['message'],
+          frame.body
+        );
+      },
+
+      onWebSocketClose: () => {
+        console.log('[WebSocket] WebSocket disconnected');
+      },
+
+      onWebSocketError: (event) => {
+        console.error('[WebSocket] WebSocket error:', event);
       }
-    };
+    });
 
-    this.ws.onclose = () => {
-      console.log('[WebSocket] Disconnected');
-      this.attemptReconnect();
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('[WebSocket] Error:', error);
-    };
+    this.client.activate();
   }
 
   disconnect(): void {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
+    if (this.client) {
+      this.client.deactivate();
+      this.client = null;
     }
-    this.reconnectAttempts = this.maxReconnectAttempts;
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
+
+    this.subscriptions.clear();
   }
 
-  send(message: any): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(message));
+  subscribeToAttendanceGroup(
+    tenantId: number,
+    attendanceGroupId: number
+  ): void {
+
+    const destination =
+      `/topic/tenant/${tenantId}/attendance-group/${attendanceGroupId}`;
+
+    if (this.subscriptions.has(destination)) {
+      return;
+    }
+
+    if (!this.client?.connected) {
+      console.warn(
+        '[WebSocket] Cannot subscribe, client not connected:',
+        destination
+      );
+      return;
+    }
+
+    const subscription = this.client.subscribe(
+      destination,
+      (message: IMessage) => {
+
+        try {
+          const notification =
+            JSON.parse(message.body);
+
+          this.messages$.next({
+            type: 'NEW_CONVERSATION',
+            payload: notification,
+            conversationId: notification.conversationId,
+            timestamp: new Date().toISOString()
+          });
+
+        } catch (error) {
+          console.error(
+            '[WebSocket] Failed to parse message:',
+            error
+          );
+        }
+      }
+    );
+
+    this.subscriptions.set(destination, subscription);
+
+    console.log(
+      '[WebSocket] Subscribed:',
+      destination
+    );
+  }
+
+  unsubscribeFromAttendanceGroup(
+    tenantId: number,
+    attendanceGroupId: number
+  ): void {
+
+    const destination =
+      `/topic/tenant/${tenantId}/attendance-group/${attendanceGroupId}`;
+
+    const subscription =
+      this.subscriptions.get(destination);
+
+    if (subscription) {
+      subscription.unsubscribe();
+      this.subscriptions.delete(destination);
+
+      console.log(
+        '[WebSocket] Unsubscribed:',
+        destination
+      );
     }
   }
 
   onMessage(type: string): Observable<any> {
     return this.messages$.pipe(
-      filter(msg => msg.type === type),
-      map(msg => msg.payload)
+      filter(message => message.type === type),
+      map(message => message.payload)
     );
   }
 
-  onConversationMessage(conversationId: number): Observable<any> {
+  onNewConversation(): Observable<NewConversationNotification> {
+    return this.onMessage('NEW_CONVERSATION');
+  }
+
+  onConversationMessage(
+    conversationId: number
+  ): Observable<any> {
+
     return this.messages$.pipe(
-      filter(msg => msg.conversationId === conversationId),
-      map(msg => msg.payload)
+      filter(
+        message =>
+          message.conversationId === conversationId
+      ),
+      map(message => message.payload)
     );
   }
 
-  sendTypingStarted(conversationId: number): void {
-    this.send({ type: 'typing_started', conversationId });
+  sendTypingStarted(
+    conversationId: number
+  ): void {
+    this.send({
+      type: 'typing_started',
+      conversationId
+    });
   }
 
-  sendTypingStopped(conversationId: number): void {
-    this.send({ type: 'typing_stopped', conversationId });
+  sendTypingStopped(
+    conversationId: number
+  ): void {
+    this.send({
+      type: 'typing_stopped',
+      conversationId
+    });
   }
 
-  private attemptReconnect(): void {
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.warn('[WebSocket] Max reconnect attempts reached');
+  send(message: any): void {
+
+    if (!this.client?.connected) {
+      console.warn(
+        '[WebSocket] Cannot send, client not connected'
+      );
       return;
     }
 
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    this.reconnectAttempts++;
+    this.client.publish({
+      destination: '/app/message',
+      body: JSON.stringify(message)
+    });
+  }
 
-    this.reconnectTimeout = setTimeout(() => {
-      console.log(`[WebSocket] Reconnecting (attempt ${this.reconnectAttempts})...`);
-      this.connect();
-    }, delay);
+  private resubscribe(): void {
+
+    const destinations =
+      Array.from(this.subscriptions.keys());
+
+    this.subscriptions.clear();
+
+    for (const destination of destinations) {
+
+      const match = destination.match(
+        /^\/topic\/tenant\/(\d+)\/attendance-group\/(\d+)$/
+      );
+
+      if (match) {
+        this.subscribeToAttendanceGroup(
+          Number(match[1]),
+          Number(match[2])
+        );
+      }
+    }
   }
 
   ngOnDestroy(): void {
