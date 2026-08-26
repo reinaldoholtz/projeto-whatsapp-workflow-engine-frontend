@@ -8,8 +8,9 @@ import { ThemeService } from '@core/services/theme.service';
   standalone: true,
   imports: [],
   template: `
-    <header class="fixed top-0 right-0 left-64 z-30 h-16 bg-white dark:bg-slate-800
-                   border-b border-gray-100 dark:border-slate-700 flex items-center px-6 gap-4">
+    <header  class="fixed top-0 right-0 left-16 z-30 h-16
+         bg-white dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700
+         flex items-center px-6 gap-4">
 
       <!-- Search -->
       <!-- <div class="flex-1 max-w-md">

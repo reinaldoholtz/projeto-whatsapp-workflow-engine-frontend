@@ -25,7 +25,7 @@ export interface ConversationMessage extends AttendanceConversationMessage {
         </div>
       }
 
-      <div class="composer-toolbar">
+      <!-- <div class="composer-toolbar">
         <button type="button" (click)="triggerFileUpload()" class="composer-btn" title="Anexar arquivo">
           <span class="material-icons-round text-xl">attach_file</span>
         </button>
@@ -38,7 +38,7 @@ export interface ConversationMessage extends AttendanceConversationMessage {
         <button type="button" (click)="openTemplatesModal()" class="composer-btn" title="Templates">
           <span class="material-icons-round text-xl">description</span>
         </button>
-      </div>
+      </div> -->
 
       @if (showEmojiPicker()) {
         <div class="composer-emoji-picker">

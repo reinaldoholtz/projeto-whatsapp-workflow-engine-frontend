@@ -9,10 +9,10 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
   standalone: true,
   imports: [RouterOutlet, SidebarComponent, TopbarComponent, ToastComponent],
   template: `
-    <div class="min-h-screen bg-gray-50 dark:bg-slate-900">
+    <div class="h-screen overflow-hidden bg-gray-50 dark:bg-slate-900">
       <app-sidebar />
       <app-topbar />
-      <main class="ml-64 pt-16 min-h-screen">
+      <main class="ml-16 pt-16 min-h-screen min-w-0">
         <div class="p-6 animate-fade-in">
           <router-outlet />
         </div>

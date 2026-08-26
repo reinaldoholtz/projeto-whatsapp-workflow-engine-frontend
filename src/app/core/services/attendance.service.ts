@@ -50,6 +50,13 @@ export class AttendanceService {
     return this.http.get<AttendanceConversationDetail>(`${this.base}/conversations/${id}`);
   }
 
+  openConversation(id: number) {
+    return this.http.put<AttendanceConversationDetail>(
+      `${this.base}/conversations/${id}/open`,
+      {}
+    );
+  }
+
   createConversation(payload: CreateAttendanceConversationRequest) {
     return this.http.post<AttendanceConversation>(`${this.base}/conversations`, payload);
   }

@@ -19,16 +19,11 @@ import { Subject, takeUntil } from 'rxjs';
   standalone: true,
   imports: [DatePipe, NgClass, ReactiveFormsModule, SkeletonComponent, ConversationComposerComponent],
   template: `
-    <div class="space-y-5">
+    <div class="space-y-3">
       <div class="page-header">
         <div>
-          <h1>Atendimento</h1>
-          <p>Central de conversas com operadores, grupos e notas internas.</p>
-        </div>
-        <button (click)="refresh()" [disabled]="loading()" class="btn-secondary">
-          <span class="material-icons-round text-base" [class.animate-spin]="loading()">refresh</span>
-          Atualizar
-        </button>
+          <h1 class="text-xl font-semibold">Atendimento</h1>
+        </div>        
       </div>
 
       <div class="attendance-shell">
@@ -239,11 +234,13 @@ import { Subject, takeUntil } from 'rxjs';
   `,
   styles: [`
     .attendance-shell {
-      @apply grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-5 min-h-[720px];
+        @apply grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)]
+              gap-5 min-h-0 h-[calc(100vh-160px)];
     }
 
     .attendance-sidebar {
-      @apply overflow-hidden flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700;
+      @apply min-h-0 overflow-hidden flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm 
+          border border-gray-100 dark:border-slate-700;
       background:
         radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 34%),
         linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(255, 255, 255, 0.96));
@@ -256,48 +253,73 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .attendance-sidebar-top {
-      @apply p-4 border-b border-gray-100 dark:border-slate-700 space-y-3;
+      @apply p-3 border-b border-gray-100
+            dark:border-slate-700 space-y-2;
     }
 
     .attendance-search {
-      @apply w-full rounded-2xl border border-gray-200 dark:border-slate-600 bg-white/90 dark:bg-slate-800/90
-             pl-10 pr-4 py-3 text-sm text-gray-800 dark:text-gray-100
-             focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+      @apply w-full h-9 rounded-full
+            border-0
+            bg-gray-100 dark:bg-slate-700
+            pl-9 pr-3
+            text-[13px]
+            text-gray-800 dark:text-gray-100
+            placeholder-gray-400
+            focus:outline-none
+            focus:ring-1 focus:ring-gray-300 dark:focus:ring-slate-500;
     }
 
     .attendance-search-icon {
-      @apply absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-[20px];
+      @apply absolute left-3 top-1/2 -translate-y-1/2
+            text-gray-500 dark:text-gray-400
+            text-[17px];
     }
 
     .attendance-select {
-      @apply w-full rounded-xl border border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-800
-             px-3 py-2.5 text-sm text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500/30;
+      @apply w-full h-8 rounded-full
+            border border-gray-200 dark:border-slate-600
+            bg-white dark:bg-slate-800
+            px-3
+            text-[12px]
+            text-gray-700 dark:text-gray-200
+            focus:outline-none
+            focus:ring-1 focus:ring-primary-500/30;
     }
 
     .attendance-stats {
-      @apply grid grid-cols-2 gap-3 p-4 border-b border-gray-100 dark:border-slate-700;
+      @apply flex items-center gap-3
+            px-3 py-2
+            border-b border-gray-100
+            dark:border-slate-700;
     }
 
     .attendance-stat-card {
-      @apply rounded-2xl border border-white/70 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 px-4 py-3 flex flex-col;
+      @apply flex items-center gap-1;
+    }
+
+    .attendance-stat-card span {
+      @apply text-[12px] text-gray-500 dark:text-gray-400;
     }
 
     .attendance-stat-card strong {
-      @apply mt-1 text-xl font-semibold text-gray-900 dark:text-white;
+      @apply text-[13px] font-semibold
+            text-gray-700 dark:text-gray-200;
     }
 
     .attendance-list {
-      @apply flex-1 overflow-y-auto p-3 space-y-2;
+      @apply flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5;
     }
 
     .attendance-conversation {
-      @apply w-full flex items-start gap-3 rounded-2xl p-3 border border-transparent
-             hover:border-primary-200 dark:hover:border-primary-900/40
-             hover:bg-white/80 dark:hover:bg-slate-800/90 transition-colors;
+      @apply w-full flex items-start gap-3
+         rounded-xl px-2.5 py-2.5
+         border border-transparent
+         hover:bg-gray-100 dark:hover:bg-slate-700/70
+         transition-colors duration-150;
     }
 
     .attendance-conversation-active {
-      @apply border-primary-200 dark:border-primary-800/50 bg-white dark:bg-slate-800 shadow-sm;
+      @apply border-transparent bg-gray-100 dark:bg-slate-700/80 shadow-sm;
     }
 
     .attendance-avatar {
@@ -334,7 +356,9 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .attendance-main {
-      @apply overflow-hidden flex flex-col min-h-[720px] bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700;
+      @apply overflow-hidden flex flex-col min-h-0
+         bg-white dark:bg-slate-800 rounded-xl shadow-sm
+         border border-gray-100 dark:border-slate-700;
     }
 
     .attendance-main-header {
@@ -346,11 +370,11 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .attendance-timeline-wrapper {
-      @apply flex flex-col min-h-0 flex-1;
+      @apply flex flex-col min-h-0 min-w-0;
     }
 
     .attendance-timeline {
-      @apply p-5 space-y-4 overflow-y-auto flex-1 min-h-[400px];
+      @apply p-5 space-y-4 overflow-y-auto flex-1 min-h-0;
       background-image:
         radial-gradient(rgba(148, 163, 184, 0.12) 0.8px, transparent 0.8px);
       background-size: 18px 18px;
@@ -384,7 +408,7 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .chat-bubble-out {
-      @apply rounded-2xl rounded-br-sm bg-primary-600 text-white px-4 py-3 max-w-[70%];
+      @apply rounded-2xl rounded-br-sm bg-primary-500 text-white px-4 py-3 max-w-[70%];
     }
 
     .chat-bubble-in {
@@ -408,6 +432,10 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
   selectedConversationId = signal<number | null>(null);
   selectedConversation = signal<AttendanceConversationDetail | null>(null);
 
+  searchFilter = signal('');
+  statusFilter = signal('');
+  groupFilter = signal('');
+
   filterForm = this.fb.group({
     search: [''],
     status: [''],
@@ -419,17 +447,22 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
   });
 
   filteredConversations = computed(() => {
-    const { search, status, groupId } = this.filterForm.getRawValue();
-    const text = (search ?? '').trim().toLowerCase();
+    const text = this.searchFilter().trim().toLowerCase();
+    const status = this.statusFilter();
+    const groupId = this.groupFilter();
 
     return this.conversations().filter(conversation => {
-      const matchesSearch = !text
+      const matchesSearch =
+        !text
         || (conversation.contactDisplayName?.toLowerCase().includes(text) ?? false)
         || conversation.contactPhoneNumber.toLowerCase().includes(text)
         || (conversation.lastMessagePreview?.toLowerCase().includes(text) ?? false);
 
-      const matchesStatus = !status || conversation.status === status;
-      const matchesGroup = !groupId || conversation.assignedGroupId === Number(groupId);
+      const matchesStatus =
+        !status || conversation.status === status;
+
+      const matchesGroup =
+        !groupId || conversation.assignedGroupId === Number(groupId);
 
       return matchesSearch && matchesStatus && matchesGroup;
     });
@@ -453,6 +486,25 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
         this.handleNewConversation(notification);
       });
 
+    // Filtros
+    this.filterForm.controls.search.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        this.searchFilter.set(value ?? '');
+      });
+
+    this.filterForm.controls.status.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        this.statusFilter.set(value ?? '');
+      });
+
+    this.filterForm.controls.groupId.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        this.groupFilter.set(value ?? '');
+      });
+
     this.loadData();
   }
 
@@ -472,16 +524,31 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
     this.selectedConversationId.set(id);
     this.loadingDetail.set(true);
 
-    this.attendanceService.getConversation(id).subscribe({
-      next: detail => {
-        this.selectedConversation.set(detail);
-        this.loadingDetail.set(false);
-      },
-      error: () => {
-        this.loadingDetail.set(false);
-        this.toast.error('Erro ao carregar detalhes da conversa.');
-      },
-    });
+    this.attendanceService.openConversation(id).subscribe({
+        next: detail => {
+          this.selectedConversation.set(detail);
+
+          // Atualiza a conversa na lista lateral
+          this.conversations.update(conversations =>
+            conversations.map(conversation =>
+              conversation.id === id
+                ? {
+                    ...conversation,
+                    status: detail.conversation.status,
+                    unreadCount: detail.conversation.unreadCount,
+                    assignedOperatorId: detail.conversation.assignedOperatorId
+                  }
+                : conversation
+            )
+          );
+
+          this.loadingDetail.set(false);
+        },
+        error: () => {
+          this.loadingDetail.set(false);
+          this.toast.error('Erro ao abrir conversa.');
+        },
+      });
   }
 
   onMessageSent(message: ConversationMessage): void {
@@ -634,12 +701,12 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
         this.loading.set(false);
 
         const selectedId = this.selectedConversationId();
-        const firstId = selectedId && conversations.some(item => item.id === selectedId)
-          ? selectedId
-          : conversations[0]?.id ?? null;
 
-        if (firstId) {
-          this.selectConversation(firstId);
+        if (
+          selectedId &&
+          conversations.some(item => item.id === selectedId)
+        ) {
+          this.selectConversation(selectedId);
         } else {
           this.selectedConversationId.set(null);
           this.selectedConversation.set(null);

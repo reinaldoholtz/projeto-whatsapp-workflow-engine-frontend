@@ -19,56 +19,129 @@ interface NavItem {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, NgClass],
+  imports: [RouterLink, RouterLinkActive],
   template: `
-    <aside class="fixed inset-y-0 left-0 z-40 flex flex-col w-64 bg-slate-900 dark:bg-slate-950
-                  border-r border-slate-700/50">
+    <aside  class="group fixed inset-y-0 left-0 z-40 flex flex-col w-16
+         bg-slate-900 dark:bg-slate-950 border-r border-slate-700/50">
 
-      <div class="flex items-center gap-3 px-5 py-5 border-b border-slate-700/50">
-        <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-          <span class="material-icons-round text-white text-lg">chat</span>
-        </div>
-        <div class="flex-1 min-w-0">
-          <p class="text-white font-semibold text-sm">CRM WhatsApp</p>
-          @if (auth.isMasterAdminMode()) {
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold
-                         bg-amber-500/20 text-amber-300 mt-0.5">
-              <span class="material-icons-round text-xs">admin_panel_settings</span> ADMIN
+      <div class="flex items-center justify-center px-3 py-5 border-b border-slate-700/50">
+        <div class="relative group/sidebar-header">
+
+          <!-- Logo -->
+          <div
+            class="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0 cursor-default"
+          >
+            <span class="material-icons-round text-white text-lg">
+              chat
             </span>
-          } @else if (auth.isMasterTenantMode()) {
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold
-                         bg-primary-500/20 text-primary-300 mt-0.5">
-              <span class="material-icons-round text-xs">admin_panel_settings</span> ADMIN
-            </span>
-          } @else if (auth.isMaster()) {
-            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-semibold
-                         bg-purple-500/20 text-purple-300 mt-0.5">
-              <span class="material-icons-round text-xs">shield</span> MASTER
-            </span>
-          } @else {
-            <p class="text-slate-400 text-xs">{{ auth.tenantName() ?? auth.user()?.databaseName ?? 'Tenant' }}</p>
-          }
-          @if (auth.isMaster()) {
-            <p class="text-slate-400 text-xs mt-1 truncate">
-              {{ auth.isMasterAdminMode() ? 'Ambiente administrativo' : (auth.tenantName() ?? auth.databaseName()) }}
+          </div>
+
+          <!-- Tooltip -->
+          <div
+            class="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2
+                  z-50 w-64 rounded-lg
+                  bg-slate-800 text-white
+                  px-3 py-2.5 shadow-lg
+                  border border-slate-700
+                  opacity-0 invisible
+                  group-hover/sidebar-header:opacity-100
+                  group-hover/sidebar-header:visible
+                  transition-all duration-150"
+          >
+            <!-- Nome -->
+            <p class="font-semibold text-sm">
+              CRM
             </p>
-          }
+
+            <!-- Master Admin -->
+            @if (auth.isMasterAdminMode()) {
+              <span
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded
+                      text-xs font-semibold
+                      bg-amber-500/20 text-amber-300 mt-1"
+              >
+                <span class="material-icons-round text-xs">
+                  admin_panel_settings
+                </span>
+                ADMIN
+              </span>
+
+            <!-- Master Tenant -->
+            } @else if (auth.isMasterTenantMode()) {
+              <span
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded
+                      text-xs font-semibold
+                      bg-primary-500/20 text-primary-300 mt-1"
+              >
+                <span class="material-icons-round text-xs">
+                  admin_panel_settings
+                </span>
+                ADMIN
+              </span>
+
+            <!-- Master -->
+            } @else if (auth.isMaster()) {
+              <span
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded
+                      text-xs font-semibold
+                      bg-purple-500/20 text-purple-300 mt-1"
+              >
+                <span class="material-icons-round text-xs">
+                  shield
+                </span>
+                MASTER
+              </span>
+
+            <!-- Usuário normal -->
+            } @else {
+              <p class="text-slate-400 text-xs mt-1">
+                {{ auth.tenantName() ?? auth.user()?.databaseName ?? 'Tenant' }}
+              </p>
+            }
+
+            <!-- Ambiente do Master -->
+            @if (auth.isMaster()) {
+              <p class="text-slate-400 text-xs mt-1">
+                {{ auth.isMasterAdminMode()
+                    ? 'Ambiente administrativo'
+                    : (auth.tenantName() ?? auth.databaseName()) }}
+              </p>
+            }
+          </div>
+
         </div>
       </div>
 
-      <nav class="flex-1 px-3 py-4 overflow-y-auto space-y-0.5">
+      <nav class="flex-1 px-2 py-4 space-y-1">
         @if (auth.isMasterTenantMode()) {
           <button
-            (click)="returnToAdmin()"
-            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-amber-300
-                   bg-amber-500/10 hover:bg-amber-500/20 transition-all duration-150 border border-amber-500/20"
-          >
-            <span class="material-icons-round text-xl flex-shrink-0">undo</span>
-            <div class="flex-1 min-w-0 text-left">
-              <span class="text-sm font-medium block truncate">Voltar para Administracao</span>
-              <span class="text-xs text-amber-200/80 block leading-tight">Retorna ao admin_db</span>
-            </div>
-          </button>
+              (click)="returnToAdmin()"
+              title="Voltar para Administração"
+              class="relative group/nav-item w-full flex items-center justify-center
+                    px-2 py-2.5 rounded-lg
+                    text-amber-300
+                    bg-amber-500/10
+                    hover:bg-amber-500/20
+                    transition-all duration-150
+                    border border-amber-500/20"
+            >
+              <span class="material-icons-round text-xl">
+                undo
+              </span>
+
+              <span
+                class="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2
+                      z-50 whitespace-nowrap rounded-lg
+                      bg-slate-800 text-white text-xs font-medium
+                      px-3 py-2 shadow-lg border border-slate-700
+                      opacity-0 invisible
+                      group-hover/nav-item:opacity-100
+                      group-hover/nav-item:visible
+                      transition-all duration-150"
+              >
+                Voltar para Administração
+              </span>
+            </button>
         }
 
         @for (item of navItems; track item.id) {
@@ -78,48 +151,63 @@ interface NavItem {
             }
             @if (childrenOf(item.id).length > 0) {
               <button
-                type="button"
-                (click)="toggleMenu(item.id)"
-                class="w-full flex items-center justify-between
-                      px-3 py-2.5 rounded-lg
-                      text-slate-400
-                      hover:bg-slate-800 hover:text-white
-                      transition-all duration-150"
-              >
-                <div class="flex items-center gap-3">
+                  type="button"
+                  (click)="toggleMenu(item.id)"
+                  [title]="item.label"
+                  class="relative group/nav-item w-full flex items-center justify-center
+                        px-2 py-2.5 rounded-lg
+                        text-slate-400
+                        hover:bg-slate-800 hover:text-white
+                        transition-all duration-150"
+                >
                   <span class="material-icons-round text-xl">
                     {{ item.icon }}
                   </span>
-                  <span class="text-sm font-medium">
+
+                  <!-- Tooltip -->
+                  <span
+                    class="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2
+                          z-50 whitespace-nowrap rounded-lg
+                          bg-slate-800 text-white text-xs font-medium
+                          px-3 py-2 shadow-lg border border-slate-700
+                          opacity-0 invisible
+                          group-hover/nav-item:opacity-100
+                          group-hover/nav-item:visible
+                          transition-all duration-150"
+                  >
                     {{ item.label }}
                   </span>
-                </div>
-                <span class="material-icons-round">
-                  {{ isExpanded(item.id) ? 'expand_less' : 'expand_more' }}
-                </span>
-              </button>
+                </button>
             } @else {
               <a
                 [routerLink]="item.route"
                 routerLinkActive="bg-primary-600/20 text-primary-400 border-primary-500/50"
                 [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
-                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400
-                      hover:bg-slate-800 hover:text-white transition-all duration-150
-                      border border-transparent"
-              >
+                [title]="item.label"
+                class="relative group/nav-item
+                      flex items-center justify-center
+                      px-2 py-2.5 rounded-lg
+                      text-slate-400
+                      hover:bg-slate-800 hover:text-white
+                      transition-all duration-150
+                      border border-transparent">
                 <span class="material-icons-round text-xl">
                   {{ item.icon }}
                 </span>
-                <div class="flex-1 min-w-0 text-left">
-                  <span class="text-sm font-medium block truncate">
-                    {{ item.label }}
-                  </span>
-                  @if (item.subLabel) {
-                    <span class="text-xs text-slate-500 block leading-tight truncate">
-                      {{ item.subLabel }}
-                    </span>
-                  }
-                </div>
+
+                <!-- Tooltip -->
+                <span
+                  class="pointer-events-none absolute left-full ml-3 top-1/2 -translate-y-1/2
+                        z-50 whitespace-nowrap rounded-lg
+                        bg-slate-800 text-white text-xs font-medium
+                        px-3 py-2 shadow-lg border border-slate-700
+                        opacity-0 invisible
+                        group-hover/nav-item:opacity-100
+                        group-hover/nav-item:visible
+                        transition-all duration-150"
+                >
+                  {{ item.label }}
+                </span>
               </a>
             }
 
@@ -150,7 +238,7 @@ interface NavItem {
         }
       </nav>
 
-      <div class="border-t border-slate-700/50 p-3">
+      <!-- <div class="border-t border-slate-700/50 p-3">
         <div class="flex items-center gap-3 px-2 py-2">
           <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0"
             [ngClass]="auth.isMasterAdminMode() ? 'bg-amber-600' : 'bg-primary-600'">
@@ -163,7 +251,7 @@ interface NavItem {
             <p class="text-slate-500 text-xs">{{ roleLabel(auth.user()?.role) }}</p>
           </div>
         </div>
-      </div>
+      </div> -->
     </aside>
   `
 })
@@ -178,9 +266,9 @@ export class SidebarComponent {
     { id: 'attendance-groups', label: 'Grupos de Atendimento', icon: 'groups', route: '/attendance-groups', roles: ['ADMIN'], subLabel: 'Áreas e acesso' },
     { id: 'attendance-queues', label: 'Filas de Atendimento', icon: 'queue', route: '/attendance-queues', roles: ['ADMIN'], subLabel: 'Distribuição e operadores' },
     { id: 'attendance-menus', label: 'Menus de Atendimento', icon: 'menu_open', route: '/attendance-menus', roles: ['ADMIN'], subLabel: 'Menus interativos' },
-    { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
-    { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
-    { id: 'campaigns', label: 'Campanhas', icon: 'campaign', route: '', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
+    // { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
+    // { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
+    // { id: 'campaigns', label: 'Campanhas', icon: 'campaign', route: '', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'], dividerBefore: true },
     { id: 'lead-disparo', label: 'Novo Disparo', icon: 'send', route: '/lead-disparo', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'historico', label: 'Histórico', icon: 'history', route: '/lead-disparo/historico', exact: true, parentId: 'campaigns', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'workflows', label: 'Workflows', icon: 'account_tree', route: '/workflows', roles: ['ADMIN'], dividerBefore: true },
@@ -189,7 +277,7 @@ export class SidebarComponent {
     { id: 'users', label: 'Usuarios', icon: 'manage_accounts', route: '/users', roles: ['ADMIN'] },
     { id: 'tenants', label: 'Tenants', icon: 'domain', route: '/tenants', roles: ['MASTER'], dividerBefore: true, subLabel: 'Gestao global' },
     { id: 'global-users', label: 'Usuarios Globais', icon: 'supervisor_account', route: '/users', roles: ['MASTER'] },
-    { id: 'settings', label: 'Configuracoes', icon: 'settings', route: '/settings' }
+    { id: 'settings', label: 'Configurações', icon: 'settings', route: '/settings' }
   ];
 
   expandedMenus = new Set<string>();
