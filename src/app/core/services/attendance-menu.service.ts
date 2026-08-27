@@ -8,6 +8,7 @@ import {
   UpdateAttendanceMenuRequest,
   CreateMenuOptionRequest,
   AttendanceQueue,
+  AttendanceGroup,
 } from '@shared/models';
 
 @Injectable({ providedIn: 'root' })
@@ -58,6 +59,12 @@ export class AttendanceMenuService {
   getQueues() {
     return this.http.get<AttendanceQueue[]>(
       `${environment.apiUrl}/attendance/queues?activeOnly=true`
+    );
+  }
+
+  getGroups() {
+    return this.http.get<AttendanceGroup[]>(
+      `${environment.apiUrl}/attendance/groups`
     );
   }
 }

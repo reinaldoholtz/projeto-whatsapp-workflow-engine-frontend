@@ -395,9 +395,13 @@ export interface UserAvailabilityRequest {
 export interface Workflow {
   id: number; name: string; description: string | null; active: boolean;
   userId?: number | null; userName?: string | null;
-  channelAccountId?: number | null; channelAccountName?: string | null; metaPhoneId?: number | null; metaPhoneName?: string | null;
+  channelAccountId?: number | null; 
+  channelAccountName?: string | null; 
+  metaPhoneId?: number | null; 
+  metaPhoneName?: string | null;
   metaPhoneDisplay?: string | null;
-  whatsappTemplateId?: number | null; whatsappTemplateName?: string | null;
+  whatsappTemplateId?: number | null; 
+  whatsappTemplateName?: string | null;
   createdAt?: string; updatedAt?: string;
 }
 
@@ -543,7 +547,7 @@ export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export interface Toast { id: string; type: ToastType; message: string; duration?: number; }
 
 // ── Attendance Menu ─────────────────────────────────────────────
-export type MenuActionType = 'QUEUE' | 'APPOINTMENT' | 'HUMAN' | 'SUBMENU' | 'MESSAGE';
+export type MenuActionType = 'GROUP' | 'QUEUE' | 'APPOINTMENT' | 'HUMAN' | 'SUBMENU' | 'MESSAGE';
 
 export interface MenuOption {
   id?: number;
@@ -551,11 +555,15 @@ export interface MenuOption {
   position?: number;
   label: string;
   actionType: MenuActionType;
+
   queueId?: number | null;
+  groupId?: number | null;
+
   appointmentTypeId?: number | null;
   targetMenuId?: number | null;
   message?: string | null;
   enabled?: boolean;
+
   createdAt?: string;
   updatedAt?: string;
 }
@@ -581,7 +589,10 @@ export interface CreateMenuOptionRequest {
   position?: number;
   label: string;
   actionType: MenuActionType;
+
   queueId?: number | null;
+  groupId?: number | null;
+
   appointmentTypeId?: number | null;
   targetMenuId?: number | null;
   message?: string | null;

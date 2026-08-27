@@ -20,7 +20,7 @@ export const routes: Routes = [
       import('./core/layouts/main-layout.component').then(m => m.MainLayoutComponent),
     canActivate: [authGuard],
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'attendance', pathMatch: 'full' },
 
       // Ambiente do tenant
       {
@@ -172,5 +172,5 @@ export const routes: Routes = [
       },
     ],
   },
-  { path: '**', redirectTo: '/dashboard' },
+  { path: '**', redirectTo: '/attendance' },
 ];

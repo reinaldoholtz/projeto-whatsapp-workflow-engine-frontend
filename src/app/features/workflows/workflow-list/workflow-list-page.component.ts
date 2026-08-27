@@ -59,10 +59,10 @@ import { ChannelAccount, User, WhatsAppTemplate, Workflow } from '@shared/models
                     {{ wf.userName }}
                   </div>
                 }
-                @if (wf.metaPhoneName) {
+                @if (wf.channelAccountName) {
                   <div class="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
                     <span class="material-icons-round text-sm">perm_phone_msg</span>
-                    WhatsApp API Meta: {{ wf.metaPhoneName }}
+                    Canal: {{ wf.channelAccountName }}
                     @if (wf.metaPhoneDisplay) {
                       <span class="text-gray-400">- {{ wf.metaPhoneDisplay }}</span>
                     }
@@ -167,7 +167,7 @@ import { ChannelAccount, User, WhatsAppTemplate, Workflow } from '@shared/models
             </div>
 
             <div>
-              <label class="form-label">Número WhatsApp (Meta)</label>
+              <label class="form-label">Canal</label>
               <div class="relative">
                 <span class="material-icons-round absolute left-3 top-1/2 -translate-y-1/2 text-base text-emerald-500">whatsapp</span>
                 <select formControlName="metaPhoneId" class="form-input pl-9">
@@ -301,6 +301,8 @@ export class WorkflowListPageComponent implements OnInit {
       users: this.userService.getAll(),
     }).subscribe({
       next: ({ workflows, phones, templates, users }) => {
+        console.log('=== WORKFLOWS ===');
+        console.log(workflows);
         this.workflows.set(workflows);
         this.activePhones.set(phones);
         this.activeTemplates.set(templates);

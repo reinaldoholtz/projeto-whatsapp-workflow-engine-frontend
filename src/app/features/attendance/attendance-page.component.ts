@@ -114,9 +114,7 @@ import { Subject, takeUntil } from 'rxjs';
         </aside>
 
         <section class="attendance-main">
-          @if (loadingDetail()) {
-            <div class="p-6"><app-skeleton [rows]="9" /></div>
-          } @else if (selectedConversation()) {
+         @if (selectedConversation()) {
             <div class="attendance-main-header">
               <div class="flex items-center gap-3 min-w-0">
                 <div class="attendance-avatar attendance-avatar-lg">
@@ -176,10 +174,6 @@ import { Subject, takeUntil } from 'rxjs';
                     <div>
                       <dt class="text-[11px] uppercase tracking-wider text-gray-400">Canal</dt>
                       <dd class="text-sm text-gray-700 dark:text-gray-300">{{ selectedConversation()!.conversation.channel }}</dd>
-                    </div>
-                    <div>
-                      <dt class="text-[11px] uppercase tracking-wider text-gray-400">Provider</dt>
-                      <dd class="text-sm text-gray-700 dark:text-gray-300">{{ selectedConversation()!.conversation.provider }}</dd>
                     </div>
                     <div>
                       <dt class="text-[11px] uppercase tracking-wider text-gray-400">Ultima interacao</dt>
@@ -260,7 +254,7 @@ import { Subject, takeUntil } from 'rxjs';
     .attendance-search {
       @apply w-full h-9 rounded-full
             border-0
-            bg-gray-100 dark:bg-slate-700
+            bg-gray-200 dark:bg-slate-700
             pl-9 pr-3
             text-[13px]
             text-gray-800 dark:text-gray-100
@@ -314,12 +308,12 @@ import { Subject, takeUntil } from 'rxjs';
       @apply w-full flex items-start gap-3
          rounded-xl px-2.5 py-2.5
          border border-transparent
-         hover:bg-gray-100 dark:hover:bg-slate-700/70
+         hover:bg-gray-200 dark:hover:bg-slate-700/70
          transition-colors duration-150;
     }
 
     .attendance-conversation-active {
-      @apply border-transparent bg-gray-100 dark:bg-slate-700/80 shadow-sm;
+      @apply border-transparent bg-gray-200 dark:bg-slate-700/80 shadow-sm;
     }
 
     .attendance-avatar {
@@ -352,7 +346,7 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .attendance-status-closed {
-      @apply bg-gray-100 text-gray-600 dark:bg-slate-700 dark:text-gray-300;
+      @apply bg-gray-200 text-gray-600 dark:bg-slate-700 dark:text-gray-300;
     }
 
     .attendance-main {
@@ -366,28 +360,40 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .attendance-main-body {
-      @apply grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_320px] flex-1 min-h-0;
-    }
+        @apply grid grid-cols-1
+              xl:grid-cols-[minmax(0,1fr)_320px]
+              flex-1 min-h-0
+              overflow-hidden;
+      }
 
-    .attendance-timeline-wrapper {
-      @apply flex flex-col min-h-0 min-w-0;
-    }
+      .attendance-timeline-wrapper {
+        @apply flex flex-col
+              min-h-0 min-w-0
+              overflow-hidden;
+      }
 
-    .attendance-timeline {
-      @apply p-5 space-y-4 overflow-y-auto flex-1 min-h-0;
-      background-image:
-        radial-gradient(rgba(148, 163, 184, 0.12) 0.8px, transparent 0.8px);
-      background-size: 18px 18px;
-    }
+      .attendance-timeline {
+        @apply p-5 space-y-4
+              overflow-y-auto
+              flex-1 min-h-0;
+      }
+
+      .attendance-sidepanel {
+        @apply border-t
+              xl:border-t-0
+              xl:border-l
+              border-gray-100 dark:border-slate-700
+              p-4
+              space-y-4
+              bg-white/70 dark:bg-slate-900/30
+              overflow-y-auto
+              min-h-0;
+      }
 
     :host-context(.dark) .attendance-timeline {
       background-image:
         radial-gradient(rgba(148, 163, 184, 0.08) 0.8px, transparent 0.8px);
-    }
-
-    .attendance-sidepanel {
-      @apply border-t 2xl:border-t-0 2xl:border-l border-gray-100 dark:border-slate-700 p-4 space-y-4 bg-white/70 dark:bg-slate-900/30;
-    }
+    }    
 
     .attendance-notes {
       @apply mt-3 space-y-3 max-h-72 overflow-y-auto pr-1;
@@ -412,7 +418,7 @@ import { Subject, takeUntil } from 'rxjs';
     }
 
     .chat-bubble-in {
-      @apply rounded-2xl rounded-bl-sm bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-100 px-4 py-3 max-w-[70%];
+      @apply rounded-2xl rounded-bl-sm bg-gray-200 dark:bg-slate-700 text-gray-800 dark:text-gray-100 px-4 py-3 max-w-[70%];
     }
   `]
 })
@@ -423,8 +429,7 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
 
-  loading = signal(true);
-  loadingDetail = signal(false);
+  loading = signal(true);  
   savingNote = signal(false);
 
   groups = signal<AttendanceGroup[]>([]);
@@ -522,33 +527,28 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
     }
 
     this.selectedConversationId.set(id);
-    this.loadingDetail.set(true);
 
     this.attendanceService.openConversation(id).subscribe({
-        next: detail => {
-          this.selectedConversation.set(detail);
+      next: detail => {
+        this.selectedConversation.set(detail);
 
-          // Atualiza a conversa na lista lateral
-          this.conversations.update(conversations =>
-            conversations.map(conversation =>
-              conversation.id === id
-                ? {
-                    ...conversation,
-                    status: detail.conversation.status,
-                    unreadCount: detail.conversation.unreadCount,
-                    assignedOperatorId: detail.conversation.assignedOperatorId
-                  }
-                : conversation
-            )
-          );
-
-          this.loadingDetail.set(false);
-        },
-        error: () => {
-          this.loadingDetail.set(false);
-          this.toast.error('Erro ao abrir conversa.');
-        },
-      });
+        this.conversations.update(conversations =>
+          conversations.map(conversation =>
+            conversation.id === id
+              ? {
+                  ...conversation,
+                  status: detail.conversation.status,
+                  unreadCount: detail.conversation.unreadCount,
+                  assignedOperatorId: detail.conversation.assignedOperatorId
+                }
+              : conversation
+          )
+        );
+      },
+      error: () => {
+        this.toast.error('Erro ao abrir conversa.');
+      },
+    });
   }
 
   onMessageSent(message: ConversationMessage): void {
@@ -703,11 +703,9 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
         const selectedId = this.selectedConversationId();
 
         if (
-          selectedId &&
-          conversations.some(item => item.id === selectedId)
+          !selectedId ||
+          !conversations.some(item => item.id === selectedId)
         ) {
-          this.selectConversation(selectedId);
-        } else {
           this.selectedConversationId.set(null);
           this.selectedConversation.set(null);
         }
@@ -724,14 +722,11 @@ export class AttendancePageComponent implements OnInit, OnDestroy {
   }
 
   private handleNewConversation(notification: NewConversationNotification): void {
-
-    // this.toast.info(
-    //   `Nova mensagem de ${notification.contactName}`
-    // );
+    const selectedId = this.selectedConversationId();
 
     this.loadData(false);
 
-    if (this.selectedConversationId() === notification.conversationId) {
+    if (selectedId === notification.conversationId) {
       this.selectConversation(notification.conversationId, true);
     }
   }

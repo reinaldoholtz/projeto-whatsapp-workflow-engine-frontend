@@ -11,6 +11,7 @@ import {
   MenuActionType,
   CreateAttendanceMenuRequest,
   CreateMenuOptionRequest,
+  AttendanceGroup,
 } from '@shared/models';
 
 @Component({
@@ -273,15 +274,15 @@ import {
                   formControlName="actionType"
                   class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg text-xs"
                 >
-                  <option value="QUEUE">QUEUE (Fila de Atendimento)</option>
-                  <option value="APPOINTMENT">APPOINTMENT (Agendamento)</option>
-                  <option value="HUMAN">HUMAN (Atendente Humano)</option>
-                  <option value="SUBMENU">SUBMENU (Submenu)</option>
-                  <option value="MESSAGE">MESSAGE (Mensagem Fixa)</option>
+                  <option value="GROUP">Grupo</option>
+                  <option value="APPOINTMENT">Agendamento</option>
+                  <option value="HUMAN">Atendente Humano</option>
+                  <option value="SUBMENU">Submenu</option>
+                  <option value="MESSAGE">Mensagem Fixa</option>
                 </select>
               </div>
 
-              @if (optionForm.get('actionType')?.value === 'QUEUE') {
+              <!-- @if (optionForm.get('actionType')?.value === 'QUEUE') {
                 <div>
                   <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Fila Alvo</label>
                   <select
@@ -294,6 +295,23 @@ import {
                     }
                   </select>
                 </div>
+              } -->
+
+              @if (optionForm.get('actionType')?.value === 'GROUP') {
+                <select
+                  formControlName="groupId"
+                  class="w-full rounded-lg border border-gray-200 dark:border-slate-600
+                        bg-white dark:bg-slate-700 px-3 py-2 text-sm
+                        text-gray-700 dark:text-gray-200">
+
+                  <option [ngValue]="null">Selecione o grupo</option>
+
+                  @for (group of groups(); track group.id) {
+                    <option [ngValue]="group.id">
+                      {{ group.name }}
+                    </option>
+                  }
+                </select>
               }
 
               @if (optionForm.get('actionType')?.value === 'APPOINTMENT') {
@@ -413,6 +431,7 @@ export class AttendanceMenusPageComponent implements OnInit {
   menus = signal<AttendanceMenu[]>([]);
   channelAccounts = signal<ChannelAccount[]>([]);
   queues = signal<{ id: number; name: string; groupId: number | null }[]>([]);
+  groups = signal<AttendanceGroup[]>([]);
 
   showMenuModal = signal(false);
   selectedMenu = signal<AttendanceMenu | null>(null);
@@ -431,8 +450,8 @@ export class AttendanceMenusPageComponent implements OnInit {
 
   optionForm = this.fb.group({
     label: ['', [Validators.required]],
-    actionType: ['QUEUE' as MenuActionType, [Validators.required]],
-    queueId: [null as number | null],
+    actionType: ['GROUP' as MenuActionType, [Validators.required]],   
+    groupId: [null as number | null],
     appointmentTypeId: [null as number | null],
     targetMenuId: [null as number | null],
     message: [''],
@@ -442,7 +461,8 @@ export class AttendanceMenusPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadMenus();
     this.loadChannelAccounts();
-    this.loadQueues();
+    // this.loadQueues();
+    this.loadGroups();
   }
 
   loadMenus(): void {
@@ -456,6 +476,17 @@ export class AttendanceMenusPageComponent implements OnInit {
     this.channelAccountService.getAllActive().subscribe({
       next: (res: ChannelAccount[]) => this.channelAccounts.set(res),
       error: () => this.toast.error('Erro ao carregar contas de canais'),
+    });
+  }
+
+  loadGroups(): void {
+    this.menuService.getGroups().subscribe({
+      next: groups => {
+        this.groups.set(groups);
+      },
+      error: () => {
+        this.toast.error('Erro ao carregar grupos.');
+      }
     });
   }
 
@@ -543,24 +574,29 @@ export class AttendanceMenusPageComponent implements OnInit {
 
   openAddOptionModal(): void {
     this.editingOption.set(null);
-    this.optionForm.reset({ actionType: 'QUEUE', enabled: true, label: '' });
-    // ensure queues are loaded before showing modal
-    if (this.queues().length === 0) {
-      this.loadQueues();
+    this.optionForm.reset({
+        actionType: 'GROUP',
+        enabled: true,
+        label: '',
+        groupId: null
+    });
+    // ensure groups are loaded before showing modal
+    if (this.groups().length === 0) {
+      this.loadGroups();
     }
     this.showOptionModal.set(true);
   }
 
   openEditOptionModal(option: MenuOption): void {
     this.editingOption.set(option);
-    // ensure queues are loaded so select shows correct value
-    if (this.queues().length === 0) {
-      this.loadQueues();
+    // ensure groups are loaded so select shows correct value
+    if (this.groups().length === 0) {
+      this.loadGroups();
     }
     this.optionForm.patchValue({
       label: option.label,
-      actionType: option.actionType,
-      queueId: option.queueId,
+      actionType: option.actionType,   
+      groupId: option.groupId,
       appointmentTypeId: option.appointmentTypeId,
       targetMenuId: option.targetMenuId,
       message: option.message,
@@ -582,9 +618,13 @@ export class AttendanceMenusPageComponent implements OnInit {
     const optPayload: CreateMenuOptionRequest = {
       label: val.label!,
       actionType: val.actionType!,
-      queueId: val.queueId ? Number(val.queueId) : null,
-      appointmentTypeId: val.appointmentTypeId ? Number(val.appointmentTypeId) : null,
-      targetMenuId: val.targetMenuId ? Number(val.targetMenuId) : null,
+      groupId: val.groupId ? Number(val.groupId) : null,
+      appointmentTypeId: val.appointmentTypeId
+        ? Number(val.appointmentTypeId)
+        : null,
+      targetMenuId: val.targetMenuId
+        ? Number(val.targetMenuId)
+        : null,
       message: val.message,
       enabled: val.enabled ?? true,
     };

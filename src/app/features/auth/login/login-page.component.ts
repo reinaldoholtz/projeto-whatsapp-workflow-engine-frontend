@@ -150,7 +150,7 @@ export class LoginPageComponent {
     this.auth.login({ email: email!, password: password! }).subscribe({
       next: () => {
         this.toast.success('Login realizado com sucesso!');
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/attendance']);
       },
       error: (err) => {
         const message =

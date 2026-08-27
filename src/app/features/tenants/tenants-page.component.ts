@@ -376,7 +376,7 @@ export class TenantsPageComponent implements OnInit {
         console.log('AuthResponse ao entrar no tenant:', res);
         this.auth.applyAuthResponse(res);
         this.toast.success(`Entrando no tenant "${t.name}"...`);
-        this.router.navigate(['/dashboard']);
+        this.router.navigate(['/attendance']);
       },
       error: (e: any) => {
         this.toast.error(e?.error?.message ?? 'Erro ao entrar no tenant.');

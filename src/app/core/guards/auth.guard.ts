@@ -13,14 +13,14 @@ export const adminGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   if (auth.isAdmin()) return true;
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/attendance']);
 };
 
 export const masterGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   if (auth.isMasterAdminMode()) return true;
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/attendance']);
 };
 
 export const tenantContextGuard: CanActivateFn = () => {
@@ -34,5 +34,5 @@ export const guestGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   if (!auth.isLoggedIn()) return true;
-  return router.createUrlTree(['/dashboard']);
+  return router.createUrlTree(['/attendance']);
 };
