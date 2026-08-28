@@ -7,12 +7,17 @@ import { ToastComponent } from '@shared/components/toast/toast.component';
 @Component({
   selector: 'app-main-layout',
   standalone: true,
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, ToastComponent],
+  imports: [
+    RouterOutlet,
+    SidebarComponent,
+    TopbarComponent,
+    ToastComponent
+  ],
   template: `
     <div class="h-screen overflow-hidden bg-gray-50 dark:bg-slate-900">
       <app-sidebar />
       <app-topbar />
-      <main class="ml-16 pt-16 min-h-screen min-w-0">
+      <main class="ml-16 h-screen min-w-0 overflow-y-auto pt-16" >
         <div class="p-6 animate-fade-in">
           <router-outlet />
         </div>
