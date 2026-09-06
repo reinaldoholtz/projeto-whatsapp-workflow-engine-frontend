@@ -7,7 +7,6 @@ import {
   CreateAttendanceMenuRequest,
   UpdateAttendanceMenuRequest,
   CreateMenuOptionRequest,
-  AttendanceQueue,
   AttendanceGroup,
 } from '@shared/models';
 
@@ -54,12 +53,6 @@ export class AttendanceMenuService {
 
   reorderOptions(menuId: number, optionIds: number[]) {
     return this.http.put<AttendanceMenu>(`${this.base}/${menuId}/options/reorder`, { optionIds });
-  }
-
-  getQueues() {
-    return this.http.get<AttendanceQueue[]>(
-      `${environment.apiUrl}/attendance/queues?activeOnly=true`
-    );
   }
 
   getGroups() {

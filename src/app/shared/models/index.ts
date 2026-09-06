@@ -262,13 +262,6 @@ export interface AttendanceGroup {
 export type AttendanceGroupRole = 'MANAGER' | 'MEMBER';
 export interface AttendanceGroupMember { id: number; userId: number; userName: string; role: AttendanceGroupRole; active: boolean; }
 export interface UpdateAttendanceGroupRequest { name: string; description?: string | null; active?: boolean; }
-export type QueuePolicyType = 'ROUND_ROBIN' | 'LEAST_BUSY' | 'PRIORITY' | 'MANUAL' | 'RANDOM';
-export type QueueMemberStatus = 'AVAILABLE' | 'BUSY' | 'OFFLINE';
-export interface AttendanceQueue { id: number; name: string; groupId: number; groupName: string; distributionPolicy: QueuePolicyType; active: boolean; }
-export interface QueueMember { id: number; userId: number; userName: string; maxSimultaneousAttendances: number; currentActiveAttendances: number; status: QueueMemberStatus; lastAssignedAt: string | null; }
-export interface CreateAttendanceQueueRequest { name: string; groupId: number; distributionPolicy?: QueuePolicyType; active?: boolean; }
-export interface UpdateAttendanceQueueRequest { name: string; groupId: number; distributionPolicy: QueuePolicyType; active?: boolean; }
-export interface UpsertQueueMemberRequest { userId: number; maxSimultaneousAttendances: number; status?: QueueMemberStatus; }
 
 export interface AttendanceConversation {
   id: number;
@@ -283,7 +276,6 @@ export interface AttendanceConversation {
   lastInteractionAt: string | null;
   assignedGroupId: number | null;
   assignedOperatorId: number | null;
-  queueId?: number | null;
   priority: ConversationPriority;
 }
 
@@ -556,7 +548,6 @@ export interface MenuOption {
   label: string;
   actionType: MenuActionType;
 
-  queueId?: number | null;
   groupId?: number | null;
 
   appointmentTypeId?: number | null;
@@ -579,18 +570,11 @@ export interface AttendanceMenu {
   updatedAt: string;
 }
 
-export interface QueueSummary {
-  id: number;
-  name: string;
-  groupId: number | null;
-}
-
 export interface CreateMenuOptionRequest {
   position?: number;
   label: string;
   actionType: MenuActionType;
 
-  queueId?: number | null;
   groupId?: number | null;
 
   appointmentTypeId?: number | null;

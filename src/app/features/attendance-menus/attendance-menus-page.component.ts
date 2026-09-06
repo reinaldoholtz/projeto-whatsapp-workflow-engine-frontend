@@ -282,21 +282,6 @@ import {
                 </select>
               </div>
 
-              <!-- @if (optionForm.get('actionType')?.value === 'QUEUE') {
-                <div>
-                  <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">Fila Alvo</label>
-                  <select
-                    formControlName="queueId"
-                    class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white rounded-lg text-xs"
-                  >
-                    <option [value]="null">Selecione uma fila...</option>
-                    @for (q of queues(); track q.id) {
-                      <option [value]="q.id">{{ q.name }} (ID: {{ q.id }})</option>
-                    }
-                  </select>
-                </div>
-              } -->
-
               @if (optionForm.get('actionType')?.value === 'GROUP') {
                 <select
                   formControlName="groupId"
@@ -430,7 +415,6 @@ export class AttendanceMenusPageComponent implements OnInit {
 
   menus = signal<AttendanceMenu[]>([]);
   channelAccounts = signal<ChannelAccount[]>([]);
-  queues = signal<{ id: number; name: string; groupId: number | null }[]>([]);
   groups = signal<AttendanceGroup[]>([]);
 
   showMenuModal = signal(false);
@@ -461,7 +445,6 @@ export class AttendanceMenusPageComponent implements OnInit {
   ngOnInit(): void {
     this.loadMenus();
     this.loadChannelAccounts();
-    // this.loadQueues();
     this.loadGroups();
   }
 
@@ -487,23 +470,6 @@ export class AttendanceMenusPageComponent implements OnInit {
       error: () => {
         this.toast.error('Erro ao carregar grupos.');
       }
-    });
-  }
-
-  loadQueues(): void {
-    console.log('[AttendanceMenus] loadQueues() chamado');
-
-    this.menuService.getQueues().subscribe({
-      next: (res) => {
-        console.log('[AttendanceMenus] Queues recebidas:', res);
-        console.log('[AttendanceMenus] Quantidade de queues:', res.length);
-
-        this.queues.set(res);
-      },
-      error: (error) => {
-        console.error('[AttendanceMenus] Erro ao carregar queues:', error);
-        this.toast.error('Erro ao carregar filas (queues)');
-      },
     });
   }
 

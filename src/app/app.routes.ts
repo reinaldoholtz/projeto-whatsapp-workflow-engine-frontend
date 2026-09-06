@@ -44,12 +44,6 @@ export const routes: Routes = [
         title: 'Grupos de Atendimento - CRM WhatsApp',
       },
       {
-        path: 'attendance-queues',
-        canActivate: [adminGuard, tenantContextGuard],
-        loadComponent: () => import('./features/attendance-queues/attendance-queues-page.component').then(m => m.AttendanceQueuesPageComponent),
-        title: 'Filas de Atendimento - CRM WhatsApp',
-      },
-      {
         path: 'dashboard',
         canActivate: [tenantContextGuard],
         loadComponent: () =>

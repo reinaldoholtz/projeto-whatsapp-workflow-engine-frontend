@@ -264,7 +264,6 @@ export class SidebarComponent {
     // { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', route: '/dashboard', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     { id: 'attendance', label: 'Atendimento', icon: 'forum', route: '/attendance', roles: ['ADMIN', 'OPERADOR'], subLabel: 'Central de conversas' },
     { id: 'attendance-groups', label: 'Grupos de Atendimento', icon: 'groups', route: '/attendance-groups', roles: ['ADMIN'], subLabel: 'Áreas e acesso' },
-    // { id: 'attendance-queues', label: 'Filas de Atendimento', icon: 'queue', route: '/attendance-queues', roles: ['ADMIN'], subLabel: 'Distribuição e operadores' },
     { id: 'attendance-menus', label: 'Menus de Atendimento', icon: 'menu_open', route: '/attendance-menus', roles: ['ADMIN'], subLabel: 'Menus interativos' },
     { id: 'leads', label: 'Leads', icon: 'people', route: '/leads', roles: ['ADMIN', 'CORRETOR', 'OPERADOR'] },
     // { id: 'appointments', label: 'Agenda', icon: 'event', route: '/appointments', roles: ['ADMIN'], subLabel: 'Agendamentos e disponibilidade' },
